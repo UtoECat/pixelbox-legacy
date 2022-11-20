@@ -25,7 +25,7 @@
 static struct box scene = {0};
 static float camx = 0, camy = 0;
 static const float cams = 1.0;
-static float scale = 3.0f;
+static float scale = 1.0f;
 
 static void control() {
 	if (get_key(GLFW_KEY_N)) {
@@ -42,8 +42,8 @@ static void control() {
 	if (get_key(GLFW_KEY_S)) camy += cams; 
 	if (get_key(GLFW_KEY_A)) camx -= cams; 
 	if (get_key(GLFW_KEY_D)) camx += cams; 
-	if (get_key(GLFW_KEY_EQUAL)) scale += 0.01; 
-	if (get_key(GLFW_KEY_MINUS)) scale -= 0.01; 
+	if (get_key(GLFW_KEY_EQUAL)) scale += 0.005; 
+	if (get_key(GLFW_KEY_MINUS)) scale -= 0.005; 
 	uint16_t x = (uint16_t)((mouse_x()+camx)/scale) % scene.w;
 	uint16_t y = (uint16_t)((mouse_y()+camy)/scale) % scene.h;
 	if (get_button(1)) {
@@ -71,25 +71,11 @@ void main_loop() {
 	while (!should_exit()) {
 		main_tick();
 		draw_clear();
-		//draw_camera(0, 0, 640, 480);
+		draw_camera(0, 0, 640, 480);
 		control();
 		glPointSize(scale);
-		game_draw_using_shader(&scene, 0, 0, camx, camy, camx + 256, camy + 256);
+		game_draw_using_shader(&scene, camx / (float)scene.w, camy / (float)scene.h, 640.0f/(float)scene.w/scale, 480.0f/(float)scene.h/scale);
 		glBindTexture(GL_TEXTURE_2D, 1);
-		glBegin(GL_TRIANGLE_FAN);
-			glColor3f(1,1,1);
-			glTexCoord2f(0,0);
-			glVertex2f(0,0);
-			glTexCoord2f(1,0);
-			glColor3f(1,1,1);
-			glVertex2f(1,0);
-			glTexCoord2f(1,1);
-			glColor3f(1,1,1);
-			glVertex2f(1,1);
-			glTexCoord2f(0,1);
-			glColor3f(1,1,1);
-			glVertex2f(0,1);
-		glEnd();
 	};
 	game_save(&scene, "./world.bin");
 }

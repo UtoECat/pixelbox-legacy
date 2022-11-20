@@ -24,7 +24,6 @@ static const char* fragment_shader_text =
 
 "void main()\n"
 "{\n"
-"		vec2 size = textureSize(world, 0);\n"
 "		color = texture(colormap, texture(world, rPos).rg) ;\n"
 "}\n";
 
@@ -138,7 +137,7 @@ void free_shaders() {
 	debugf("Shader sucessfully freed!");
 }
 
-void game_draw_using_shader(struct box* b, uint16_t x, uint16_t y, uint16_t sx, uint16_t sy, uint16_t w, uint16_t h) {
+void game_draw_using_shader(struct box* b, float x, float y, float sx, float sy) {
 	if (!b) return;
 	gl_check_error("somewhere BEFORE drawing");
 	glUseProgram(program);
@@ -153,14 +152,14 @@ void game_draw_using_shader(struct box* b, uint16_t x, uint16_t y, uint16_t sx, 
 	gl_check_error("binding stuff for drawing");
 	// i love legacy opengl A LOT
 	glBegin(GL_TRIANGLE_FAN);
-		glVertexAttrib2f(1,   sx,   sy);
-		glVertexAttrib2f(0, -1.0 + x, -1.0 + y);
-		glVertexAttrib2f(1,   sx,    h);
-		glVertexAttrib2f(0, -1.0 + x,  1.0 + y);
-		glVertexAttrib2f(1,    w,    h);
-		glVertexAttrib2f(0,  1.0 + x,  1.0 + y);
-		glVertexAttrib2f(1,    w,   sy);
-		glVertexAttrib2f(0,  1.0 + x, -1.0 + y);
+		glVertexAttrib2f(1,        x*sx,         y*sy);
+		glVertexAttrib2f(0, -1.0,  1.0);
+		glVertexAttrib2f(1,        x*sx, (y + 1) *sy);
+		glVertexAttrib2f(0, -1.0, -1.0);
+		glVertexAttrib2f(1, (x + 1) *sx, (y + 1) *sy);
+		glVertexAttrib2f(0,  1.0, -1.0);
+		glVertexAttrib2f(1, (x + 1) *sx,        y*sy);
+		glVertexAttrib2f(0,  1.0,  1.0);
 	glEnd();
 	glActiveTexture(GL_TEXTURE0);
 	gl_check_error("drawing");

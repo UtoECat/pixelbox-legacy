@@ -52,8 +52,7 @@ int  (game_reload) (struct box* b, const char* filename);
 int  (game_save) (struct box* b, const char* filename);
 void (game_tick) (struct box* b, uint8_t speed);
 //void (game_draw) (struct box* b); deprecated
-void game_draw_using_shader(struct box* b, uint16_t x, uint16_t y, uint16_t sx, uint16_t sy, uint16_t w, uint16_t h); 
-
+void game_draw_using_shader(struct box* b, float x, float y, float s, float sy);
 void (game_noise) (struct box* b, float k);
 
 static inline struct pixel* box_get(struct box* b, uint16_t x, uint16_t y) {
