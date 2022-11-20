@@ -19,7 +19,8 @@
 #include <main.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <GLFW/glfw3.h>
+
+int game_change_texture_size(struct box* b, int mode);
 
 int  (game_init) (struct box* b, uint16_t w, uint16_t h) {
 	if (!b) return -1;
@@ -32,6 +33,7 @@ int  (game_init) (struct box* b, uint16_t w, uint16_t h) {
 		errorf(0, "Can't allocate memory!");
 		return -1;
 	}
+	game_change_texture_size(b, 0);
 	return 0;
 }
 
@@ -49,18 +51,10 @@ void (game_tick) (struct box* b, uint8_t speed) {
 
 void (game_free) (struct box* b) {
 	if (!b) return;
+	b->w = 0;
+	b->h = 0;
+	game_change_texture_size(b, 1);
 	free(b->arr);
-}
-
-void (game_draw) (struct box* b) {
-	glPushMatrix();
-	for (uint16_t y = 0; y < b->h; y++) {
-		for (uint16_t x = 0; x < b->w; x++) {
-			uint8_t t = b->arr[x + b->w * y].type;
-			if (pixel_draw[t]) pixel_draw[t](b, x, y);
-		}
-	}
-	glPopMatrix();
 }
 
 // reloads existed world, and restore existed if loading fails
@@ -80,14 +74,14 @@ int  (game_load) (struct box* b, const char* filename) {
 		return -1;
 	}
 	size_t sz = fread(&b->w, sizeof(uint16_t), 2, f);
-	if (sz < sizeof(uint16_t) * 2) {
+	if (sz < 2) {
 		errorf(0, "Can't read world width :(");
 		fclose(f); return -2;
 	}
 	debugf("World width = %i, world height = %i", b->w, b->h);
 	game_init(b, b->w, b->h);
 	sz = fread(b->arr, sizeof(struct pixel), b->w * b->h, f);
-	if (sz < sizeof(struct pixel) * b->w * b->h) {
+	if (sz < b->w * b->h) {
 		errorf(0, "World is not fully readed! (%li)", sz);
 		errorf(0, "But excepted size %li", sizeof(struct pixel) * b->w * b->h);
 	}
@@ -104,12 +98,12 @@ int  (game_save) (struct box* b, const char* filename) {
 		return -1;
 	}
 	size_t sz = fwrite(&b->w, sizeof(uint16_t), 2, f);
-	if (sz < sizeof(uint16_t) * 2) {
+	if (sz < 2) {
 		errorf(0, "Can't write world width :(");
 		fclose(f); return -2;
 	}
 	sz = fwrite(b->arr, sizeof(struct pixel), b->w * b->h, f);
-	if (sz < sizeof(struct pixel) * b->w * b->h) {
+	if (sz < b->w * b->h) {
 		errorf(0, "World is not fully writed! (%li)", sz);
 		errorf(0, "But excepted size %li", sizeof(struct pixel) * b->w * b->h);
 	}

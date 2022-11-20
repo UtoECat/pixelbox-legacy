@@ -32,6 +32,7 @@ _Static_assert(sizeof(struct pixel) == sizeof(short));
 struct box {
 	uint16_t w, h;
 	struct pixel* arr;
+	unsigned int texture;
 };
 
 // atom type processing
@@ -50,7 +51,8 @@ void (game_free) (struct box* b);
 int  (game_reload) (struct box* b, const char* filename);
 int  (game_save) (struct box* b, const char* filename);
 void (game_tick) (struct box* b, uint8_t speed);
-void (game_draw) (struct box* b);
+//void (game_draw) (struct box* b); deprecated
+void game_draw_using_shader(struct box* b, uint16_t x, uint16_t y, uint16_t sx, uint16_t sy, uint16_t w, uint16_t h); 
 
 void (game_noise) (struct box* b, float k);
 
@@ -98,3 +100,4 @@ float (music_get_volume) (void);
 
 void (debugf) (const char* fmt, ...);
 void (errorf) (int v, const char* fmt, ...); // v must be true
+void gl_check_error(const char* stage);

@@ -18,6 +18,7 @@
 
 #include <main.h>
 #include <stdio.h>
+#include <galogen/gl.h>
 #include <GLFW/glfw3.h>
 
 void draw_clear(void) {

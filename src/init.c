@@ -17,6 +17,7 @@
  */
 
 #include <main.h>
+#include <galogen/gl.h>
 #include <GLFW/glfw3.h>
 #include <stddef.h>
 #include <string.h>
@@ -31,6 +32,7 @@ static void (resizecb) (GLFWwindow*, int w, int h) {
 	glViewport(0, 0, w, h);
 }
 
+
 static const char* title = "PixelBox 1.0 : ";
 static const size_t title_size = 15;
 
@@ -41,8 +43,13 @@ void music_tick(void);
 void init_pixel_types(void);
 void free_pixel_types(void);
 
+// shader init/free
+void init_shaders();
+void free_shaders();
+
 void main_free() {
 	music_free();
+	free_shaders();
 	glfwDestroyWindow(win);	
 	glfwTerminate();
 	free_pixel_types();
@@ -67,6 +74,9 @@ int main_load() {
 		errorf(0, "Can't init GLFW3!");
 		return -1;
 	}
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 	win = glfwCreateWindow(640, 480, "PixelBox 1.0", NULL, NULL);
 	if (!win) {
 		errorf(0, "Can't open window!");
@@ -75,6 +85,8 @@ int main_load() {
 	glfwSetFramebufferSizeCallback(win, resizecb);
 	glfwSetWindowSizeLimits(win, 640, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
 	glfwSetWindowAspectRatio(win, 640, 480);
+	glfwMakeContextCurrent(win);
+	init_shaders();
 
 	if (music_init() != 0) {
 		errorf(0, "Audio is disabled :)");
@@ -82,11 +94,58 @@ int main_load() {
 	return 0;
 }
 
+const char* gl_error_string(GLenum err) {
+  switch (err) {
+    case GL_INVALID_ENUM:
+      return "GL_INVALID_ENUM";
+
+    case GL_INVALID_VALUE:
+      return "GL_INVALID_VALUE";
+
+    case GL_INVALID_OPERATION:
+      return "GL_INVALID_OPERATION";
+
+    case GL_STACK_OVERFLOW:
+      return "GL_STACK_OVERFLOW";
+
+    case GL_STACK_UNDERFLOW:
+      return "GL_STACK_UNDERFLOW";
+
+    case GL_OUT_OF_MEMORY:
+      return "GL_OUT_OF_MEMORY";
+
+		default:
+			return "UNKNOWN_ERROR";
+	}
+}
+
+#include <stdlib.h>
+void gl_check_error(const char* stage) {
+	#ifndef NDEBUG
+	GLenum err;
+	if ((err = glGetError()) != GL_NO_ERROR) {
+		errorf(0, "OpenGL Error %s (%i)", gl_error_string(err), err);
+		errorf(0, "OpenGL Error happened at stage %s", stage);
+		errorf(0, "Aborting...");
+		abort();
+	}
+	#endif
+}
+
 void main_tick (void) {
 	music_tick();
 	glfwPollEvents();
 	glfwSwapBuffers(win);
 	glfwMakeContextCurrent(win);
+	GLenum err; int bad = 0;
+	while((err = glGetError()) != GL_NO_ERROR) {
+  	errorf(0, "OpenGL Error %s (%i)", gl_error_string(err), err);
+		bad = 1;
+	}
+	if (bad) {
+		glfwSetWindowShouldClose(win, 1);
+		errorf(0, "OpenGL Errors founded. No sense to continue...");
+	}
 }
 
 int   (get_key)    (int i) {

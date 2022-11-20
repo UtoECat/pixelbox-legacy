@@ -18,18 +18,10 @@
 
 #include <main.h>
 #include <stdio.h>
-#include <GLFW/glfw3.h>
 
 pixel_cb pixel_proc[MAX_PIXELS_TYPE] = {NULL};
-pixel_cb pixel_draw[MAX_PIXELS_TYPE] = {NULL};
-
-static float pixel_color[MAX_PIXELS_TYPE][3];
-
-static void draw_pix(struct box* b, uint16_t x, uint16_t y) {
-	uint8_t t = box_get(b, x, y)->type;
-	draw_color(pixel_color[t][0], pixel_color[t][1], pixel_color[t][2]);
-	draw_point(x, y, 0);
-}
+//pixel_cb pixel_draw[MAX_PIXELS_TYPE] = {NULL} deprecated
+uint8_t colormap_arr[256 * 256 * 3];
 
 static void swap_pixels(struct pixel* a, struct pixel* b) {
 	struct pixel c = *a;
@@ -43,53 +35,43 @@ static void move_pixel(struct pixel* a, struct pixel* b) {
 }	
 
 // Liquid!
-
-static inline int unpack_pixel (struct pixel* a, struct pixel *b) {
-	if (a->pack >= 2) {
-		a->pack /= 2;
-		b->pack = a->pack;
-		b->type = a->type;
-		return 1;
-	} else {
-		*b = *a;
-		a->type = 0;
-		return 0;
-	};
-}
-
-static inline int sync_pixels(struct pixel* a, struct pixel *b) {
-	if (a->pack + b->pack >= 2) {
-		a->pack = (a->pack + b->pack) / 2;
-		b->pack = a->pack;
-		return 1;
-	} else {
-		a->pack += b->pack;
-		*b = *a;
-		a->type = 0;
-		return 0;
-	};	
-}
-
-static int subproc_liquid(struct pixel* p, struct pixel* d) {
-	if (d->type == 0) {
-		if (!unpack_pixel(p, d)) return 1;
-	} else if (d->type == p->type) {
-		if (!sync_pixels(p, d)) return 1;
-	}
-	return 0;
-}
-
-static void proc_liquid(struct box* b, uint16_t x, uint16_t y) {
-	struct pixel* p = box_get(b, x, y);
+#define SAME(A, B) (A->type == B->type)
+#define VOID(A) (A->type == 0)
+#define ADDIFSAME(B, A) if SAME(B, A) {cnt++; v+= A->pack;} else if VOID(A) cnt++;
+#define ADDIFSAMEANDNOTNIL(B, A) if (A && SAME(B, A)) {cnt++; v+= A->pack;} else if (A && VOID(A)) cnt++;
+#define APPLYVAL(B, A, V) if (SAME(B, A) || VOID(A)) {A->pack = V; A->type = B->type;}
+static void proc_liquid(struct box* o, uint16_t x, uint16_t y) {
+	struct pixel* b = box_get(o, x, y);
+	struct pixel* a = box_get(o, x-1, y);
+	struct pixel* c = box_get(o, x+1, y);
 	struct pixel* d = NULL;
-	if (y+1 != b->h) {
-		d = box_get(b, x, y + 1);
-		if (subproc_liquid(p, d)) return;
+	if (y + 1 != o->h) d = box_get(o, x, y + 1);
+	int cnt = 1; int v = b->pack;
+	// get particle system summary
+	ADDIFSAME(b, a);
+	ADDIFSAME(b, c);
+	ADDIFSAMEANDNOTNIL(b, d);
+	// calculate
+	if (v < cnt) { // pack ALL in middle
+		if SAME(b, a) a->type = 0;
+		if SAME(b, c) c->type = 0;
+		if (d && (SAME(b, d) || VOID(d))) { // move bottom
+			d->type = b->type;
+			b->type = 0;
+			d->pack = v;
+		} else b->pack = v;
+	} else { // if can normalize
+		int one = v / cnt;
+		int err = v - (one * cnt);
+		int luck = (x + y) % cnt;
+		int pos = 0;
+
+		b->pack = one + ((luck == pos++) ? err : 0);
+		APPLYVAL(b, a, one + ((luck == pos++) ? err : 0));
+		APPLYVAL(b, c, one + ((luck == pos++) ? err : 0));
+		if (d) {APPLYVAL(b, d, one + ((luck == pos++) ? err : 0));}
+		// end of normalize
 	}
-	d = box_get(b, x + 1, y);
-	if (subproc_liquid(p, d)) return;
-	d = box_get(b, x - 1, y);
-	if (subproc_liquid(p, d)) return;
 }
 
 // Sand
@@ -106,17 +88,27 @@ static void proc_sand(struct box* b, uint16_t x, uint16_t y) {
 	}
 }
 
+// solid
+static void proc_solid (struct box* b, uint16_t x, uint16_t y) {
+
+}
+
+
 void init_pixel_types(void) {
-	for (int i = 0; i < MAX_PIXELS_TYPE; i++) {
-		pixel_color[i][0] = (i & 7) / 7.0f;
-		pixel_color[i][1] = (i >> 3 & 7) / 7.0f;
-		pixel_color[i][2] = (i >> 6 & 3) / 3.0f;
+	for (int y = 0; y < 256; y++) {
+		for (int i = 0; i < 256; i++) {
+			const int pos = (i + y * 256) * 3;
+			colormap_arr[pos + 0] = (i & 7) / 7.0f * 255;
+			colormap_arr[pos + 1] = (i >> 3 & 7) /7.0f * 255;
+			colormap_arr[pos + 2] = (i >> 6 & 3) / 3.0f * 255;
+		}
 	}
+
 	for (int i = 0; i < MAX_PIXELS_TYPE; i++) {
-		pixel_draw[i] = draw_pix;
 		pixel_proc[i] = proc_sand;
 	}
 	pixel_proc[10] = proc_liquid;
+	pixel_proc[30]  = proc_solid;
 	debugf("Pixel types loaded!");
 }
 

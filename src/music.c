@@ -19,7 +19,7 @@
 #include <main.h>
 #include <stddef.h>
 #include <string.h>
-#include <miniaudio.h>
+#include <thirdparty/miniaudio.h>
 #include <dirlist.h>
 
 static struct dirnode *ost_list = NULL;

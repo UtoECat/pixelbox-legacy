@@ -19,6 +19,7 @@
 #include <main.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <galogen/gl.h>
 #include <GLFW/glfw3.h>
 
 static struct box scene = {0};
@@ -46,12 +47,12 @@ static void control() {
 	uint16_t x = (uint16_t)((mouse_x()+camx)/scale) % scene.w;
 	uint16_t y = (uint16_t)((mouse_y()+camy)/scale) % scene.h;
 	if (get_button(1)) {
-		box_get(&scene, x, y)->type = 0;
+		box_get(&scene, x, y)->type = 30;
 		box_get(&scene, x, y)->pack = 0;
 	}
 	if (get_button(0)) {
 		box_get(&scene, x, y)->type = 10;
-		box_get(&scene, x, y)->pack = 1;
+		box_get(&scene, x, y)->pack = 10;
 	}
 	if (get_key(GLFW_KEY_R)) {
 		box_get(&scene, x, y)->type = rand() % MAX_PIXELS_TYPE;
@@ -61,6 +62,7 @@ static void control() {
 void main_loop() {
 	game_init(&scene, 256, 256);
 	game_noise(&scene, 0.1);
+	game_reload(&scene, "./world.bin");
 
 	music_menu();
 	music_volume(0.5);
@@ -69,10 +71,25 @@ void main_loop() {
 	while (!should_exit()) {
 		main_tick();
 		draw_clear();
-		draw_camera(camx, camy, 640,480);
+		//draw_camera(0, 0, 640, 480);
 		control();
-		glScalef(scale, scale,0);
 		glPointSize(scale);
-		game_draw(&scene);
+		game_draw_using_shader(&scene, 0, 0, camx, camy, camx + 256, camy + 256);
+		glBindTexture(GL_TEXTURE_2D, 1);
+		glBegin(GL_TRIANGLE_FAN);
+			glColor3f(1,1,1);
+			glTexCoord2f(0,0);
+			glVertex2f(0,0);
+			glTexCoord2f(1,0);
+			glColor3f(1,1,1);
+			glVertex2f(1,0);
+			glTexCoord2f(1,1);
+			glColor3f(1,1,1);
+			glVertex2f(1,1);
+			glTexCoord2f(0,1);
+			glColor3f(1,1,1);
+			glVertex2f(0,1);
+		glEnd();
 	};
+	game_save(&scene, "./world.bin");
 }
