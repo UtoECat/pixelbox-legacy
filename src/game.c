@@ -17,6 +17,7 @@
  */
 
 #include <main.h>
+#include <box.h>
 #include <stdio.h>
 #include <stdlib.h>
 

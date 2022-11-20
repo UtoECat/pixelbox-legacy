@@ -16,26 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-#include <stdint.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <string.h>
+#define MINIAUDIO_IMPLEMENTATION
+#include <audio/miniaudio.h>
 
-// debug and log functions
-
-void (debugf) (const char* fmt, ...);
-void (errorf) (int v, const char* fmt, ...); // v must be true
-void gl_check_error(const char* stage);
-
-// functions for window system
-
-void (set_status) (const char*);
-int  (should_exit) (void);
-
-int   (get_key)    (int);
-int   (get_button) (int);
-float (mouse_x)    (void);
-float (mouse_y)    (void);
-
-void (main_tick) (void);

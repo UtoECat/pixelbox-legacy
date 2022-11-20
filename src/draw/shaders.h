@@ -17,25 +17,27 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <string.h>
 
-// debug and log functions
+// SHaders
+static const char* vertex_shader_text =
+"#version 330\n"
+"layout(location = 0) in vec2 pos;\n"
+"layout(location = 1) in vec2 wpos;\n"
+"out vec2 rPos;\n"
+"void main()\n"
+"{\n"
+"		gl_Position = vec4(pos, 0.0, 1.0);\n"
+"		rPos = wpos;\n"
+"}\n";
+ 
+static const char* fragment_shader_text =
+"#version 330\n"
+"uniform sampler2D world;\n"
+"uniform sampler2D colormap;\n"
+"in vec2 rPos;\n"
+"out vec4 color;\n"
 
-void (debugf) (const char* fmt, ...);
-void (errorf) (int v, const char* fmt, ...); // v must be true
-void gl_check_error(const char* stage);
-
-// functions for window system
-
-void (set_status) (const char*);
-int  (should_exit) (void);
-
-int   (get_key)    (int);
-int   (get_button) (int);
-float (mouse_x)    (void);
-float (mouse_y)    (void);
-
-void (main_tick) (void);
+"void main()\n"
+"{\n"
+"		color = texture(colormap, texture(world, rPos).rg) ;\n"
+"}\n";

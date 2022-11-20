@@ -17,25 +17,17 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <string.h>
+#include <draw/gl.h>
+#include <GLFW/glfw3.h>
 
-// debug and log functions
+extern uint8_t colormap_arr[256 * 256 * 3];
 
-void (debugf) (const char* fmt, ...);
-void (errorf) (int v, const char* fmt, ...); // v must be true
-void gl_check_error(const char* stage);
+// drawing
 
-// functions for window system
+void draw_clear(void);
+void draw_camera(float x, float y, float w, float h);
+void draw_rect(float x, float y, float w, float h, float z);
+void draw_color(float r, float g, float b);
+void draw_point(float x, float y, float z);
 
-void (set_status) (const char*);
-int  (should_exit) (void);
 
-int   (get_key)    (int);
-int   (get_button) (int);
-float (mouse_x)    (void);
-float (mouse_y)    (void);
-
-void (main_tick) (void);

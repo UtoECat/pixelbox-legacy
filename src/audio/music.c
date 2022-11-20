@@ -17,10 +17,9 @@
  */
 
 #include <main.h>
-#include <stddef.h>
-#include <string.h>
-#include <thirdparty/miniaudio.h>
-#include <dirlist.h>
+#include <audio/music.h>
+#include <audio/miniaudio.h>
+#include <utils/dirlist.h>
 
 static struct dirnode *ost_list = NULL;
 static struct dirnode *ost_current = NULL;

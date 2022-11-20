@@ -38,6 +38,34 @@ void errorf (int v, const char* fmt, ...) {
 	va_end(args);
 }
 
+#include <init.h>
+#include <stdlib.h>
+
+void main_free() {
+	music_free();
+	free_shaders();
+	window_free();
+	free_pixel_types();
+}
+
+// init
+
+int main_load() {
+	init_pixel_types();
+	if (window_init() != 0) abort();
+	init_shaders();
+
+	if (music_init() != 0) {
+		errorf(0, "Audio is disabled");
+	}
+	return 0;
+}
+
+void main_tick (void) {
+	music_tick();
+	window_tick();	
+}
+
 int main() {
 	debugf("Hello World!");
 

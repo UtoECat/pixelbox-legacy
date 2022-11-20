@@ -17,25 +17,24 @@
  */
 
 #pragma once
-#include <stdint.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <string.h>
 
-// debug and log functions
+// main initialization :D
 
-void (debugf) (const char* fmt, ...);
-void (errorf) (int v, const char* fmt, ...); // v must be true
-void gl_check_error(const char* stage);
+int  (main_load) (void);
+void (main_free) (void);
 
-// functions for window system
+// private init
+int  music_init(void);
+void music_free(void);
+void music_tick(void);
+void init_pixel_types(void);
+void free_pixel_types(void);
+void init_shaders();
+void free_shaders();
+int  window_init();
+void window_free();
+void window_tick();
 
-void (set_status) (const char*);
-int  (should_exit) (void);
+// should be declared
+void (main_loop) (void);
 
-int   (get_key)    (int);
-int   (get_button) (int);
-float (mouse_x)    (void);
-float (mouse_y)    (void);
-
-void (main_tick) (void);
