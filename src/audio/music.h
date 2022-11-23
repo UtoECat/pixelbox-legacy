@@ -16,6 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define MINIAUDIO_IMPLEMENTATION
-#include <thirdparty/miniaudio.h>
+#pragma once
 
+// audio system functions
+
+void (music_menu) (void);
+void (music_ost ) (void);
+const char* (music_now) (void);
+
+void (music_volume)      (float v);
+float (music_get_volume) (void);

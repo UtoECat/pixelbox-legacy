@@ -17,9 +17,7 @@
  */
 
 #include <main.h>
-#include <stdio.h>
-#include <galogen/gl.h>
-#include <GLFW/glfw3.h>
+#include <draw/draw.h>
 
 void draw_clear(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -48,10 +46,4 @@ void draw_rect(float x, float y, float w, float h, float z) {
 
 void draw_color(float r, float g, float b) {
 	glColor3f(r, g, b);
-}
-
-void draw_point(float x, float y, float z) {
-	glBegin(GL_POINTS);
-	glVertex3f(x, y, z);
-	glEnd();
 }

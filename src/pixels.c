@@ -17,10 +17,9 @@
  */
 
 #include <main.h>
-#include <stdio.h>
+#include <box.h>
 
 pixel_cb pixel_proc[MAX_PIXELS_TYPE] = {NULL};
-//pixel_cb pixel_draw[MAX_PIXELS_TYPE] = {NULL} deprecated
 uint8_t colormap_arr[256 * 256 * 3];
 
 static void swap_pixels(struct pixel* a, struct pixel* b) {
@@ -89,7 +88,7 @@ static void proc_sand(struct box* b, uint16_t x, uint16_t y) {
 }
 
 // solid
-static void proc_solid (struct box* b, uint16_t x, uint16_t y) {
+static void proc_solid (struct box*, uint16_t, uint16_t) {
 
 }
 

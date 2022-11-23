@@ -1,35 +1,28 @@
-#include <galogen/gl.h>
+/*
+ * PixelBox
+ * Copyright (C) 2022 UtoECat
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 #include <main.h>
+#include <draw/draw.h>
 #include <stdlib.h>
-#include <assert.h>
-
-// SHaders
-static const char* vertex_shader_text =
-"#version 330\n"
-"layout(location = 0) in vec2 pos;\n"
-"layout(location = 1) in vec2 wpos;\n"
-"out vec2 rPos;\n"
-"void main()\n"
-"{\n"
-"		gl_Position = vec4(pos, 0.0, 1.0);\n"
-"		rPos = wpos;\n"
-"}\n";
- 
-static const char* fragment_shader_text =
-"#version 330\n"
-"uniform sampler2D world;\n"
-"uniform sampler2D colormap;\n"
-"in vec2 rPos;\n"
-"out vec4 color;\n"
-
-"void main()\n"
-"{\n"
-"		color = texture(colormap, texture(world, rPos).rg) ;\n"
-"}\n";
+#include <box.h>
+#include <draw/shaders.h>
 
 static GLuint program;
 static GLuint colormap;
-static GLuint attr_ppos = 0, attr_wpos = 1;
 
 extern uint8_t colormap_arr[256 * 256 * 3];
 
@@ -150,18 +143,23 @@ void game_draw_using_shader(struct box* b, float x, float y, float sx, float sy)
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, colormap);
 	gl_check_error("binding stuff for drawing");
+	x  /= (float) b->w;
+	y  /= (float) b->h;
+	sx /= (float) b->w;
+	sy /= (float) b->h;
 	// i love legacy opengl A LOT
 	glBegin(GL_TRIANGLE_FAN);
-		glVertexAttrib2f(1,        x*sx,         y*sy);
+		glVertexAttrib2f(1,   x,   y);
 		glVertexAttrib2f(0, -1.0,  1.0);
-		glVertexAttrib2f(1,        x*sx, (y + 1) *sy);
+		glVertexAttrib2f(1,   x,  sy);
 		glVertexAttrib2f(0, -1.0, -1.0);
-		glVertexAttrib2f(1, (x + 1) *sx, (y + 1) *sy);
+		glVertexAttrib2f(1,  sx,  sy);
 		glVertexAttrib2f(0,  1.0, -1.0);
-		glVertexAttrib2f(1, (x + 1) *sx,        y*sy);
+		glVertexAttrib2f(1,  sx,   y);
 		glVertexAttrib2f(0,  1.0,  1.0);
 	glEnd();
 	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	gl_check_error("drawing");
 	glUseProgram(0);
 }
