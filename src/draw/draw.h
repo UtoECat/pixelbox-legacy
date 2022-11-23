@@ -30,4 +30,10 @@ void draw_rect(float x, float y, float w, float h, float z);
 void draw_color(float r, float g, float b);
 void draw_point(float x, float y, float z);
 
-
+// shaders and textures
+typedef struct gl_texture texture_t;
+int  texture_init(texture_t* t, const void* data, int w, int h);
+int  texture_set (const void* data, int x, int y, int w, int h);
+int  texture_file(const char* file);
+int  texture_subset();
+int  shader_init()
