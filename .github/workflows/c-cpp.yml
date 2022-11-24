@@ -11,7 +11,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout
+    # checkout to get acess to repository files
+    - name: checkout 
       uses: actions/checkout@v3
+    # install dependencies
+    - name: install-libs
+      run: |
+        sudo apt-get update
+        sudo apt-get install glfw3
+    # build it! finally
     - name: build application
       run: make
