@@ -43,8 +43,9 @@ all : $(TARGET)
 
 test: $(TARGET)
 	@echo "[MAKE] Sucess building!"
+	@$(RM) -f ./world.bin
 	@echo "[MAKE] Run executable with --test flag"
-	@$(TARGET) --test
+	@$(TARGET) --test || test -f ./world.bin
 
 $(TARGET): $(OBJS)
 	@echo "[MAKE] Building target..."
