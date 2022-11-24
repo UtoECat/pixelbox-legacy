@@ -23,10 +23,12 @@ static const char* vertex_shader_text =
 "#version 330\n"
 "layout(location = 0) in vec2 pos;\n"
 "layout(location = 1) in vec2 wpos;\n"
+"uniform mat4 mProjection;\n"
+"uniform mat4 mModelview;\n"
 "out vec2 rPos;\n"
 "void main()\n"
 "{\n"
-"		gl_Position = vec4(pos, 0.0, 1.0);\n"
+"		gl_Position = mModelview * mProjection * vec4(pos, 0.0, 1.0);\n"
 "		rPos = wpos;\n"
 "}\n";
  
@@ -39,5 +41,6 @@ static const char* fragment_shader_text =
 
 "void main()\n"
 "{\n"
-"		color = texture(colormap, texture(world, rPos).rg) ;\n"
+"   vec2 size = textureSize(world, 0);"
+"		color = texture(colormap, texture(world, rPos / size).rg) ;\n"
 "}\n";

@@ -39,7 +39,7 @@ static ma_sound current = {0};
 static void parse_ost(void) {
 	ost_list = dir_read(OST_PATH, "mp3");
 	if (!ost_list) {
-		errorf(0, "No OST founded! :(");
+		errorf("No OST founded! :(");
 	}
 }
 
@@ -51,7 +51,7 @@ int music_init (void) {
 
 	result = ma_engine_init(NULL, &engine);
 	if (result != MA_SUCCESS) {
-		errorf(0, "Can't initialize audio!");
+		errorf("Can't initialize audio!");
 		return 1;
 	}
 	started = 1;
@@ -95,7 +95,7 @@ static int play_it(const char* shortname, int loop) {
 	res = ma_sound_init_from_file(&engine, buff, flag, NULL, NULL, &current);
 
 	if (res != MA_SUCCESS) {
-		errorf(0, "Can't play file %s!", buff);
+		errorf("Can't play file %s!", buff);
 		started = 1;
 		return -1;
 	};

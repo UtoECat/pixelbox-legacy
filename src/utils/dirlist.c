@@ -25,7 +25,7 @@ struct dirnode* dir_read(const char* dir, char* type) {
 	DIR *f; struct dirent *d;
 	f = opendir(dir);
 	if (!f) {
-		errorf(0, "Can't open OST directory!");
+		errorf("Can't open %s directory!", dir);
 		return NULL;
 	}	
 	struct dirnode* list = NULL;
@@ -33,7 +33,7 @@ struct dirnode* dir_read(const char* dir, char* type) {
 		if (d->d_type != DT_REG) continue;
 		if (strstr(d->d_name, type) != NULL) {
 			struct dirnode* n = malloc(sizeof(struct dirnode) + strlen(d->d_name));
-			if (!n) {errorf(0, "allocation error");abort();}
+			if (!n) {crash("allocation error");}
 			n->next = list;
 			list = n;
 			memcpy(n->filename, d->d_name, strlen(d->d_name) + 1);

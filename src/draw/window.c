@@ -25,7 +25,7 @@ static const size_t title_size = 15;
 static float mkx = 1.0, mky = 1.0f;
 
 static void (glfwerrcb) (int i, const char* c) {
-	errorf(0, "GLFW Error %s (code %i)!", c, i);
+	errorf("GLFW Error %s (code %i)!", c, i);
 }
 
 static void (resizecb) (GLFWwindow*, int w, int h) {
@@ -45,14 +45,14 @@ void window_free() {
 	glfwTerminate();
 }
 
-void (set_status) (const char* c) {
+void (app_set_status) (const char* c) {
 	char buff[strlen(c) + title_size + 2];
 	memcpy(buff, title, title_size);
 	memcpy(buff + title_size, c, strlen(c) + 1); 
 	glfwSetWindowTitle(win, buff);
 }
 
-int  (should_exit) (void) {
+int  (app_should_exit) (void) {
 	return glfwWindowShouldClose(win);
 }
 
@@ -60,7 +60,7 @@ int window_init() {
 	debugf("GLFW Version = %s!", glfwGetVersionString());
 	glfwSetErrorCallback(glfwerrcb);
 	if (glfwInit() != GLFW_TRUE) {
-		errorf(0, "Can't init GLFW3!");
+		errorf("Can't init GLFW3!");
 		return -1;
 	}
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -68,7 +68,7 @@ int window_init() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 	win = glfwCreateWindow(640, 480, "PixelBox 1.0", NULL, NULL);
 	if (!win) {
-		errorf(0, "Can't open window!");
+		errorf("Can't open window!");
 		return -2;
 	}
 	glfwSetFramebufferSizeCallback(win, resizecb);
@@ -108,29 +108,28 @@ void gl_check_error(const char* stage) {
 	#ifndef NDEBUG
 	GLenum err;
 	if ((err = glGetError()) != GL_NO_ERROR) {
-		errorf(0, "OpenGL Error %s (%i)", gl_error_string(err), err);
-		errorf(0, "OpenGL Error happened at stage %s", stage);
-		errorf(0, "Aborting...");
-		abort();
+		errorf("OpenGL Error %s (%i)", gl_error_string(err), err);
+		errorf("OpenGL Error happened at stage %s", stage);
+		crash("Crash with stacktrace");
 	}
 	#endif
 }
 
-int   (get_key)    (int i) {
+int   (app_get_key)    (int i) {
 	return glfwGetKey(win, i);
 }
 
-int   (get_button) (int i) {
+int   (app_get_button) (int i) {
 	return glfwGetMouseButton(win, i);
 }
 
-float (mouse_x) (void) {
+float (app_mouse_x) (void) {
 	double v = 0.0;
 	glfwGetCursorPos(win, &v, NULL);
 	return v * mkx;
 }
 
-float (mouse_y) (void) {
+float (app_mouse_y) (void) {
 	double v = 0.0;
 	glfwGetCursorPos(win, NULL, &v);
 	return v * mky;

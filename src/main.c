@@ -17,64 +17,91 @@
  */
 
 #include <main.h>
-#include <stdio.h>
-
-void debugf (const char* fmt, ...) {
-	va_list args;
-	va_start(args, fmt);
-	fprintf(stderr, "[DEBUG] : ");
-	vfprintf(stderr, fmt, args);
-	fprintf(stderr, "\n");
-	va_end(args);
-}
-
-void errorf (int v, const char* fmt, ...) {
-	if (v) return;
-	va_list args;
-	va_start(args, fmt);
-	fprintf(stderr, "[ERROR] : ");
-	vfprintf(stderr, fmt, args);
-	fprintf(stderr, "\n");
-	va_end(args);
-}
-
-#include <init.h>
 #include <stdlib.h>
+#include <box.h>
+#include <draw/draw.h>
+#include <audio/music.h>
 
-void main_free() {
-	music_free();
-	free_shaders();
-	window_free();
-	free_pixel_types();
-}
+static struct box scene = {0};
+static float camx = 0, camy = 0;
+static const float cams = 1.0;
+static float scale = 1.0f;
 
-// init
-
-int main_load() {
-	init_pixel_types();
-	if (window_init() != 0) abort();
-	init_shaders();
-
-	if (music_init() != 0) {
-		errorf(0, "Audio is disabled");
+static uint8_t type = 1;
+static void control() {
+	if (app_get_key(GLFW_KEY_N)) {
+		music_ost();
+	};
+	if (app_get_key(GLFW_KEY_G)) {
+		game_tick(&scene, 1);
 	}
+	if (app_get_key(GLFW_KEY_C)) {
+		game_free(&scene);
+		game_init(&scene, 256, 256);
+	}
+	if (app_get_key(GLFW_KEY_W)) camy -= cams; 
+	if (app_get_key(GLFW_KEY_S)) camy += cams; 
+	if (app_get_key(GLFW_KEY_A)) camx -= cams; 
+	if (app_get_key(GLFW_KEY_D)) camx += cams; 
+	if (app_get_key(GLFW_KEY_EQUAL)) scale += 0.05; 
+	if (app_get_key(GLFW_KEY_MINUS)) scale -= 0.05; 
+	uint16_t x = (uint16_t)((app_mouse_x() - camx)/scale);
+	uint16_t y = (uint16_t)((app_mouse_y() - camy)/scale);
+	x %= scene.w;
+	y %= scene.h;
+	if (app_get_button(1)) {
+		box_get(&scene, x, y)->type = 0;
+		box_get(&scene, x, y)->pack = 0;
+	}
+	if (app_get_button(0)) {
+		box_get(&scene, x, y)->type = type;
+		box_get(&scene, x, y)->pack = 10;
+	}
+	if (app_get_key(GLFW_KEY_R)) {
+		box_get(&scene, x, y)->type = rand() % MAX_PIXELS_TYPE;
+	}
+	if (app_get_key(GLFW_KEY_Q)) {
+		type--;
+	}
+	if (app_get_key(GLFW_KEY_E)) {
+		type++;
+	}
+}
+
+int  game_shader_init();
+void game_shader_free();
+
+int  app_init (void) {
+	if (game_shader_init() != 0) {
+		errorf("Can't initialize game shader!");
+		return 1;
+	}	
+	game_init(&scene, 256, 256);
+	game_noise(&scene, 0.1);
+	game_reload(&scene, "./world.bin");
+
+	music_menu();
+	music_volume(0.5);
+	app_set_status("Heloo User :p");
 	return 0;
 }
 
-void main_tick (void) {
-	music_tick();
-	window_tick();	
+void app_loop(void) {
+	while (!app_should_exit()) {
+		app_tick();
+		draw_clear();
+		draw_camera(0, 0, 640, 480);
+		control();
+		glPointSize(scale);
+		game_draw(&scene, camx, camy, scene.w*scale, scene.h*scale, 0, 0, scene.w, scene.h);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		draw_color(1,1,1);
+		draw_rect(app_mouse_x(), app_mouse_y(),10,10,1);
+	};
 }
 
-int main() {
-	debugf("Hello World!");
-
-	int v = main_load();
-	errorf(v == 0, "Can't init game properly!");
-	errorf(v >= 0, "Fatal : Init failed (code %i)!", v);
-	if (v < 0) return v;
-	main_loop();
-	main_free();
-	debugf("Goodbye!");
-	return 0;
+void app_free(void) {
+	game_save(&scene, "./world.bin");
+	game_free(&scene);
+	game_shader_free();
 }

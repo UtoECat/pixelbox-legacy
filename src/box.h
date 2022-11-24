@@ -18,6 +18,9 @@
 
 #pragma once
 #include <main.h>
+#include <draw/draw.h>
+
+#define MAX_PIXELS_TYPE 256
 
 // atom of world
 struct pixel {
@@ -31,14 +34,8 @@ _Static_assert(sizeof(struct pixel) == sizeof(short));
 struct box {
 	uint16_t w, h;
 	struct pixel* arr;
-	unsigned int texture;
+	d_texture_t texture;
 };
-
-// atom type processing
-typedef void (*pixel_cb) (struct box*, uint16_t x, uint16_t y);
-
-#define MAX_PIXELS_TYPE 256
-extern pixel_cb pixel_proc[MAX_PIXELS_TYPE];
 
 // functions for pixelbox state
 
@@ -58,4 +55,4 @@ static inline struct pixel* box_get(struct box* b, uint16_t x, uint16_t y) {
 	return &b->arr[x + b->w * y];
 }
 
-void game_draw_using_shader(struct box* b, float x, float y, float s, float sy);
+void game_draw(struct box* b, float x, float y, float w, float h, float camx, float camy, float camw, float camh);

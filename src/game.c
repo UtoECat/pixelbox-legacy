@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int game_change_texture_size(struct box* b, int mode);
+static int game_change_texture_size(struct box* b);
 
 int  (game_init) (struct box* b, uint16_t w, uint16_t h) {
 	if (!b) return -1;
@@ -31,30 +31,21 @@ int  (game_init) (struct box* b, uint16_t w, uint16_t h) {
 	b->h = h;
 	b->arr = calloc(w * h + 1, sizeof(struct pixel));
 	if (!b->arr) {
-		errorf(0, "Can't allocate memory!");
+		crash("Can't allocate memory!");
 		return -1;
 	}
-	game_change_texture_size(b, 0);
+	b->texture.id = 0;
+	game_change_texture_size(b);
 	return 0;
 }
 
-void (game_tick) (struct box* b, uint8_t speed) {
-	while (speed) {
-		for (uint16_t y = b->h; y > 0; y--) {
-			for (uint16_t x = 0; x < b->w; x++) {
-				uint8_t t = b->arr[x + b->w * (y-1)].type;
-				if (pixel_proc[t]) pixel_proc[t](b, x, y-1);
-			}
-		}
-		speed--;
-	}
-}
+
 
 void (game_free) (struct box* b) {
 	if (!b) return;
 	b->w = 0;
 	b->h = 0;
-	game_change_texture_size(b, 1);
+	game_change_texture_size(b);
 	free(b->arr);
 }
 
@@ -71,20 +62,20 @@ int  (game_load) (struct box* b, const char* filename) {
 	if (!b) return -1;
 	FILE *f = fopen(filename, "rb");
 	if (!f) {
-		errorf(0, "Can't open file %s!", filename);
+		errorf("Can't open file %s!", filename);
 		return -1;
 	}
 	size_t sz = fread(&b->w, sizeof(uint16_t), 2, f);
 	if (sz < 2) {
-		errorf(0, "Can't read world width :(");
+		errorf("Can't read world width :(");
 		fclose(f); return -2;
 	}
 	debugf("World width = %i, world height = %i", b->w, b->h);
 	game_init(b, b->w, b->h);
 	sz = fread(b->arr, sizeof(struct pixel), b->w * b->h, f);
 	if (sz < b->w * b->h) {
-		errorf(0, "World is not fully readed! (%li)", sz);
-		errorf(0, "But excepted size %li", sizeof(struct pixel) * b->w * b->h);
+		errorf("World is not fully readed! (%li)", sz);
+		errorf("But excepted size %li", sizeof(struct pixel) * b->w * b->h);
 	}
 	fclose(f);
 	debugf("World [%i:%i] loaded from %s", b->w, b->h, filename);
@@ -95,18 +86,18 @@ int  (game_save) (struct box* b, const char* filename) {
 	if (!b) return -1;
 	FILE *f = fopen(filename, "wb");
 	if (!f) {
-		errorf(0, "Can't open file %s!", filename);
+		errorf("Can't open file %s!", filename);
 		return -1;
 	}
 	size_t sz = fwrite(&b->w, sizeof(uint16_t), 2, f);
 	if (sz < 2) {
-		errorf(0, "Can't write world width :(");
+		errorf("Can't write world width :(");
 		fclose(f); return -2;
 	}
 	sz = fwrite(b->arr, sizeof(struct pixel), b->w * b->h, f);
 	if (sz < b->w * b->h) {
-		errorf(0, "World is not fully writed! (%li)", sz);
-		errorf(0, "But excepted size %li", sizeof(struct pixel) * b->w * b->h);
+		errorf("World is not fully writed! (%li)", sz);
+		errorf("But excepted size %li", sizeof(struct pixel) * b->w * b->h);
 	}
 	fclose(f);
 	debugf("World [%i:%i] saved to %s", b->w, b->h, filename);
@@ -127,3 +118,25 @@ void (game_noise) (struct box* b, float k) {
 		}
 	}
 }
+
+// Internal function!
+static int game_change_texture_size(struct box* b) {
+	if (!b) return -1;
+	// generate world representation texture
+	// red color -> type
+	// greeen color -> pack
+	if (!b->w && !b->h) {
+		d_texture_free(&b->texture);
+		return 0;
+	} else if (!b->texture.id) {
+		d_texture_init_ex(&b->texture, GL_TEXTURE_2D, GL_RG, GL_RG);
+		d_texture_load(&b->texture, (uint8_t*)b->arr, b->w, b->h);
+		debugf("Initialized world texture (%i)", b->texture.id);
+	} else { // resize
+		d_texture_load(&b->texture, (uint8_t*)b->arr, b->w, b->h);
+		debugf("Resized world texture");
+	}
+	gl_check_error("game_change_texture_size");
+	return 0;
+}
+

@@ -15,9 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 #include <main.h>
 #include <box.h>
+
+typedef void (*pixel_cb) (struct box*, uint16_t, uint16_t);
 
 pixel_cb pixel_proc[MAX_PIXELS_TYPE] = {NULL};
 uint8_t colormap_arr[256 * 256 * 3];
@@ -93,7 +94,7 @@ static void proc_solid (struct box*, uint16_t, uint16_t) {
 }
 
 
-void init_pixel_types(void) {
+void pixtyp_init(void) {
 	for (int y = 0; y < 256; y++) {
 		for (int i = 0; i < 256; i++) {
 			const int pos = (i + y * 256) * 3;
@@ -111,6 +112,18 @@ void init_pixel_types(void) {
 	debugf("Pixel types loaded!");
 }
 
-void free_pixel_types(void) {
+void pixtyp_free(void) {
 	debugf("Pixel types freed!");
+}
+
+void (game_tick) (struct box* b, uint8_t speed) {
+	while (speed) {
+		for (uint16_t y = b->h; y > 0; y--) {
+			for (uint16_t x = 0; x < b->w; x++) {
+				uint8_t t = b->arr[x + b->w * (y-1)].type;
+				if (pixel_proc[t]) pixel_proc[t](b, x, y-1);
+			}
+		}
+		speed--;
+	}
 }

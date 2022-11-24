@@ -18,23 +18,14 @@
 
 #pragma once
 
-// main initialization :D
-
-int  (main_load) (void);
-void (main_free) (void);
-
 // private init
-int  music_init(void);
-void music_free(void);
-void music_tick(void);
-void init_pixel_types(void);
-void free_pixel_types(void);
-void init_shaders();
-void free_shaders();
-int  window_init();
-void window_free();
-void window_tick();
-
-// should be declared
-void (main_loop) (void);
-
+int  music_init (void);
+void music_free (void);
+void music_tick (void);
+void pixtyp_init(void);
+void pixtyp_free(void);
+int  draw_init  (void);
+void draw_free  (void);
+int  window_init(void);
+void window_free(void);
+void window_tick(void);

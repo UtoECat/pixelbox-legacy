@@ -23,19 +23,29 @@
 #include <string.h>
 
 // debug and log functions
-
-void (debugf) (const char* fmt, ...);
-void (errorf) (int v, const char* fmt, ...); // v must be true
+void debugf (const char* fmt, ...) 
+__attribute__ ((format (printf, 1, 2)));
+void errorf (const char* fmt, ...) 
+__attribute__ ((format (printf, 1, 2)));
+void warningf (const char* fmt, ...) 
+__attribute__ ((format (printf, 1, 2)));
+void crash (const char* fmt) 
+__attribute__ ((__noreturn__));
 void gl_check_error(const char* stage);
 
-// functions for window system
+// functions for application
+void (app_set_status) (const char*);
+int  (app_should_exit) (void);
 
-void (set_status) (const char*);
-int  (should_exit) (void);
+int   (app_get_key)    (int);
+int   (app_get_button) (int);
+float (app_mouse_x)    (void);
+float (app_mouse_y)    (void);
 
-int   (get_key)    (int);
-int   (get_button) (int);
-float (mouse_x)    (void);
-float (mouse_y)    (void);
+// call this in your loop
+void  (app_tick)       (void);
 
-void (main_tick) (void);
+// should be declared
+int  (app_init) (void);
+void (app_loop) (void);
+void (app_free) (void);
