@@ -61,6 +61,7 @@ jobs:
     - run: |
         echo "Run, Build Application using script"
         sudo apt-get install libglfw3-dev
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
