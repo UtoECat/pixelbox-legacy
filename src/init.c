@@ -114,7 +114,7 @@ void app_tick (void) {
 int app_test_mode = 0;
 
 int main(int argc, char** argv) {
-	for (int i = 1; i < argc; i++)
+	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--test") == 0) {
 			debugf("Test mode enabled!");
 			app_test_mode = 1;

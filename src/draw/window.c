@@ -57,7 +57,8 @@ int  (app_should_exit) (void) {
 }
 
 int  (app_set_exit) (int i) {
-	return glfwSetWindowShouldClose(win, i);
+	glfwSetWindowShouldClose(win, i);
+	return i;
 }
 
 int window_init() {
