@@ -56,6 +56,10 @@ int  (app_should_exit) (void) {
 	return glfwWindowShouldClose(win);
 }
 
+int  (app_set_exit) (int i) {
+	return glfwSetWindowShouldClose(win, i);
+}
+
 int window_init() {
 	debugf("GLFW Version = %s!", glfwGetVersionString());
 	glfwSetErrorCallback(glfwerrcb);
