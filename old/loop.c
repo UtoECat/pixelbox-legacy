@@ -27,6 +27,7 @@ static float camx = 0, camy = 0;
 static const float cams = 1.0;
 static float scale = 1.0f;
 
+static uint8_t type = 1;
 static void control() {
 	if (get_key(GLFW_KEY_N)) {
 		music_ost();
@@ -55,11 +56,17 @@ static void control() {
 		box_get(&scene, x, y)->pack = 0;
 	}
 	if (get_button(0)) {
-		box_get(&scene, x, y)->type = 10;
+		box_get(&scene, x, y)->type = type;
 		box_get(&scene, x, y)->pack = 10;
 	}
 	if (get_key(GLFW_KEY_R)) {
 		box_get(&scene, x, y)->type = rand() % MAX_PIXELS_TYPE;
+	}
+	if (get_key(GLFW_KEY_Q)) {
+		type--;
+	}
+	if (get_key(GLFW_KEY_E)) {
+		type++;
 	}
 }
 

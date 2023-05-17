@@ -5,7 +5,7 @@ BINARY_DIR ?= ./
 SRC_DIRS ?= ./src 
 INC_DIRS ?= ./src
 
-COMPILER ?= $(CC)
+COMPILER ?= $(CXX)
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
 
@@ -21,7 +21,7 @@ endif
 
 # no edit!
 TARGET = $(BINARY_DIR)/$(TARGET_NAME)
-SRCS := $(shell find $(SRC_DIRS) -name '*.c')
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 INC_FILES := $(shell find $(INC_DIRS) -type d) 
@@ -31,15 +31,12 @@ CCFLAGS += $(INC_FLAGS) -MMD -MP
 UNIFLAGS += 
 LDLIBS    = -lGL -lglfw -lm
 
-BUILD_START = $(shell date +%s)
-
 # targets
 
 .PHONY: all clean
 
 all : $(TARGET)
 	@echo "[MAKE] Sucess!"
-	@echo "[MAKE] Time elapsed (sec) : $(shell ./timediff.sh $(BUILD_START))"
 
 $(TARGET): $(OBJS)
 	@echo "[MAKE] Building target..."
@@ -47,7 +44,7 @@ $(TARGET): $(OBJS)
 	@$(COMPILER) $(OBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
 
 # c source
-$(BUILD_DIR)/%.c.o: %.c
+$(BUILD_DIR)/%.cpp.o: %.cpp
 	@echo "[MAKE] Building $<"
 	@$(MKDIR_P) $(dir $@)
 	@$(COMPILER) $(CCFLAGS) $(UNIFLAGS) -c $< -o $@

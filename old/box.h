@@ -19,7 +19,7 @@
 #pragma once
 #include <main.h>
 
-// atom of world
+// atom of the world
 struct pixel {
 	uint8_t type;
 	uint8_t pack;

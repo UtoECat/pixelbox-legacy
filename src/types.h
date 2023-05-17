@@ -1,5 +1,6 @@
 /*
  * PixelBox
+ * Chunk definition.
  * Copyright (C) 2022 UtoECat
 
  * This program is free software: you can redistribute it and/or modify
@@ -17,12 +18,21 @@
  */
 
 #pragma once
+#include "world.h"
 
-// audio system functions
+namespace pixelbox {
 
-void (music_menu) (void);
-void (music_ost ) (void);
-const char* (music_now) (void);
+	struct processContext {
+		World*     world;
+		Chunk*     chunk;
+		atom_coord  x, y;
+	};
 
-void (music_volume)      (float v);
-float (music_get_volume) (void);
+	using AtomProcessFunc = void(*)(const processContext*);
+
+	struct AtomType {
+		const char* name;
+		AtomProcessFunc proc;
+	};
+
+};

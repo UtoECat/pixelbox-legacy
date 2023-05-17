@@ -1,5 +1,6 @@
 /*
  * PixelBox
+ * Atom definition.
  * Copyright (C) 2022 UtoECat
 
  * This program is free software: you can redistribute it and/or modify
@@ -16,6 +17,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define MINIAUDIO_IMPLEMENTATION
-#include <audio/miniaudio.h>
+#pragma once
+#include <cstdint>
 
+namespace pixelbox {
+	constexpr unsigned char TYPES_COUNT = 64;
+	constexpr unsigned char TYPE_MASK   = 63; // 00111111b
+
+	struct Atom {
+		uint8_t kind;
+		uint8_t data;
+		public:
+		inline unsigned char getType(void) {
+			return kind & TYPE_MASK;
+		}
+		inline unsigned char getKind(void) {
+			return kind >> 6;
+		}
+	};
+
+	static_assert(sizeof(Atom) == sizeof(uint16_t));
+
+};
