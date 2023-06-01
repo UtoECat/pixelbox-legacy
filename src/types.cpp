@@ -26,7 +26,22 @@ namespace pixelbox {
 	static void nothing (const processContext* ctx) {}
 
 	static AtomType types[TYPES_COUNT] = {
-		{"", nothing}
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing},
+		{"", nothing}, {"", nothing}, {"", nothing}, {"", nothing}
 	};
 
 	void   World::processChunk(Chunk *chunk) {
@@ -34,6 +49,7 @@ namespace pixelbox {
 		for (; tmp.x < CHUNK_WIDTH; tmp.x++) {
 			for (; tmp.y < CHUNK_HEIGHT; tmp.y++) {
 				uint8_t type = (*chunk)[tmp.x][tmp.y].getType();
+				if (!types[type].proc) throw "undefined pixel type";
 				types[type].proc(&tmp);
 			}
 		}

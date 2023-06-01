@@ -18,11 +18,13 @@
  */
 
 #pragma once
+#include <filesystem>
 #include "atom.h"
 #include "chunk.h"
 #include "utils.h"
-#include "ext/gl.h"
-#include <filesystem>
+#include "ext/gl.h" // OpenGL -> rendering
+#include "ext/pcg32.h" // cool RNG generator
+#include "storage.h" // brand new storage system
 
 namespace pixelbox {
 
@@ -31,8 +33,10 @@ namespace pixelbox {
 	class World {
 		chunk_position        spawn_pos;
 		ChunkTable<HASH_SIZE> table;
-		path                    dir;
+		Storage*              storage;
 		GLuint      textures[16] = {0};
+		GLuint             program = 0;
+		uint64_t              seed = 0;
 		public:
 		using hashTable = ChunkTable<HASH_SIZE>;
 		int32_t     camx, camy, camw, camh;
@@ -40,10 +44,25 @@ namespace pixelbox {
 		World() = default;
 		~World(); // +
 		void releaseRender(); // +
-		bool setDirectory(std::string path); // +
-		bool setDirectory(const char* path); // +
-		void process();
-		void render();
+		void setStorage(Storage* sptr);
+		void setSeed(uint64_t seed); // +
+		/*
+		 * Process and render functions.
+		 * You MUST call collectGarbage after them, to collect unused
+		 * chunks from static memory.
+		 *
+		 * It's better to start from render function (it loads visible
+		 * chunks), and then call process, and, at the end, collectGarbage
+		 */
+		void process(); 
+		void render ();
+
+		/*
+		 * Sets camera position and size.
+		 * No rotation here, to not overcomplicate things.
+		 * Position is specified in atoms of the whole world
+		 */
+		void setCamera(int32_t x, int32_t y, int32_t w, int32_t h);
 
 		/*
 		 * theese one are highlevel... in some kind :p
@@ -56,6 +75,13 @@ namespace pixelbox {
 		 */
 		void   collectGarbage(void);
 
+		/*
+		 * Unloads all chunks.
+		 * This is NOT DONE IN DESTRUCTOR!!!111
+		 */
+		void   unloadAll();
+
+
 		protected :
 		bool   checkDirectory(); // +
 
@@ -64,11 +90,13 @@ namespace pixelbox {
 		 * allocated space.
 		 */
 		void   loadChunk(Chunk* c); // +
+		void   generateChunk(Chunk* c);
 		void   saveChunk(Chunk* c); // +
 		void   processChunk(Chunk *c); // +-
-
+		PCGRandom getWGenRNGState(Chunk* c); // yes...
 
 		// render
+		void init_shader_program();
 		GLuint getIstTexture(int i); // (+) makes if not exists
 		int    getMaxTextures(void); // +
 		void   updateTexture(int i, Chunk *c); // + + binds it

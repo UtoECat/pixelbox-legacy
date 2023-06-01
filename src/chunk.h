@@ -27,8 +27,8 @@ namespace pixelbox {
 	constexpr atom_coord CHUNK_WIDTH  = 32;
 	constexpr atom_coord CHUNK_HEIGHT = 32;
 
-	constexpr unsigned char KEEP_LOADED_TIMES = 5;
-	constexpr unsigned int  CHUNKS_HEAP_COUNT = 128;
+	constexpr unsigned char KEEP_LOADED_TIMES = 3;
+	constexpr unsigned int  CHUNKS_HEAP_COUNT = 512;
 
 	typedef struct alignas(alignof(uint32_t)) chunk_position {
 		chunk_coord x;
@@ -38,7 +38,7 @@ namespace pixelbox {
 			return x == pos.x && y == pos.y;
 		}
 		bool operator!=(const chunk_position& pos) const {
-			return x != pos.x && y != pos.y;
+			return x != pos.x || y != pos.y;
 		}
 	} chunk_position;
 
@@ -60,7 +60,8 @@ namespace pixelbox {
 		}
 		inline uint16_t getRandom(void) {
 			uint16_t b = rng_state + 1;
-			rng_state ^= rng_state * 4365420 + rng_state;
+			rng_state ^= rng_state * 4365420;
+			b = b * 303 >> 8;
 			rng_state = rng_state + b;
 			return rng_state;
 		}

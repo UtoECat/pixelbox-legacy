@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <utility>
 #include <cstddef>
+#include <cstdio>
 
 namespace pixelbox {
 
@@ -43,7 +44,7 @@ namespace pixelbox {
 		protected:
 		struct Object {
 			bool used = false;
-			char alligment[alignof(T)-sizeof(bool)];
+			uint64_t redzone[2] = {0};
 			char data[sizeof(T)];
 		};
 
@@ -65,6 +66,8 @@ namespace pixelbox {
 			for (unsigned int i = last_freed; i < CNT; i++) {
 				Object *o = &(bump[i]);
 				if (!o->used) {
+					if (o->redzone[0] != 0 || o->redzone[1] != 0) 
+						throw "heap corruption!";
 					o->used = true;
 					last_freed = i;
 					return (T*)o->data;
@@ -106,7 +109,11 @@ namespace pixelbox {
 			Object* o = (Object*) p;
 			if (BUMP_DEBUG) { // pointer magic here :D
 				if (o < bump || o > bump + CNT) throw "pointer is out of bump";
-				if (((size_t)bump - (size_t)o) % sizeof(Object) != 0) throw "bad offset";
+				if (((size_t)bump - (size_t)o) % alignof(Object) != 0) {
+					fprintf(stderr, "ERR: bad poiner alligment given in BumpAllocator::free()\n");
+					fprintf(stderr, "ERR: given %p, excepted %p", o, 
+						(void*)(((size_t)o/alignof(Object))*alignof(Object)));
+				}
 				if (!o->used) throw "double dealloc";
 			}
 			o->used = false;
@@ -142,14 +149,14 @@ namespace pixelbox {
 	}
 
 	static inline uint32_t hashkey_cast(const chunk_position& pos) {
-		if (sizeof(uint32_t) == sizeof(chunk_position)) {
+		//if (sizeof(uint32_t) == sizeof(chunk_position)) {
 			// fast one
-			return dirty_cast<uint32_t, chunk_position>(pos);
-		} else {// slow one
-			uint32_t a = dirty_cast<uint32_t, chunk_coord>(pos.x);
-			uint32_t b = dirty_cast<uint32_t, chunk_coord>(pos.y);
+		//	return dirty_cast<uint32_t, chunk_position>(pos);
+		//} else {// slow one
+			uint32_t a = dirty_cast<uint16_t>(pos.x);
+			uint32_t b = dirty_cast<uint16_t>(pos.y);
 			return a | (b << 16);
-		}
+		//}
 	}
 
 	using size_t = std::size_t;
@@ -205,7 +212,9 @@ namespace pixelbox {
 			if (!n) {
 				hash[key] = newnode; 
 			} else {
-				while (n->next != nullptr) n = n->next;
+				while (n->next != nullptr) {
+					n = n->next;
+				}
 				n->next = newnode;
 			}
 			return &(newnode->value);

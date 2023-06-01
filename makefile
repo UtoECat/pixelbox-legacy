@@ -9,10 +9,10 @@ COMPILER ?= $(CXX)
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
 
-DEBUG = TRUE
+DEBUG = FALSE
 
 ifdef DEBUG
-CCFLAGS = -O0 -Wall -Wextra
+CCFLAGS = -O0 -Wall -Wextra -g
 UNIFLAGS = -fsanitize=address -fsanitize=undefined
 else
 CCFLAGS = -O2 -Wall
@@ -29,7 +29,7 @@ INC_FLAGS := $(addprefix -I,$(INC_FILES))
 
 CCFLAGS += $(INC_FLAGS) -MMD -MP
 UNIFLAGS += 
-LDLIBS    = -lGL -lglfw -lm
+LDLIBS    = -lGL -lglfw -lm -lsqlite3
 
 # targets
 

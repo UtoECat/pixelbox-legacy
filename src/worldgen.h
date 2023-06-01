@@ -1,0 +1,44 @@
+/*
+ * PixelBox
+ * Copyright (C) 2022 UtoECat
+
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+#include "world.h"
+
+namespace pixelbox {
+
+	// generate individual chunk
+	void World::generateChunk(Chunk* c) {
+		auto rand = getWGenRNGState(c);
+		for (atom_coord x = 0; x < CHUNK_WIDTH; x++) {
+			for (atom_coord y = 0; y < CHUNK_HEIGHT; y++) {
+				if (x == 0 || x == CHUNK_WIDTH-1) {
+					(*c)[x][y] = (Atom){31 | ((rand()%3)<<6), 255};
+				} else if (y == 0 || y == CHUNK_HEIGHT-1) {
+					(*c)[x][y] = (Atom){63 | ((rand()%3)<<6), 255};
+				} else {
+					//(*c)[x][y] = (Atom){rand()%256, rand()};
+					(*c)[x][y] = (Atom){0, rand()};
+				}
+			}
+		}
+		for (atom_coord x = 2; x <= 4; x++)
+			for (atom_coord y = 2; y <= 4; y++) {
+				(*c)[x][y] = (Atom){7 | (1<<6), 255};
+		}
+	};
+};
