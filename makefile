@@ -9,7 +9,7 @@ COMPILER ?= $(CXX)
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
 
-DEBUG = FALSE
+DEBUG = 1
 
 ifdef DEBUG
 CCFLAGS = -O0 -Wall -Wextra -g

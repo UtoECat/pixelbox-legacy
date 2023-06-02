@@ -20,14 +20,17 @@
 
 namespace pixelbox {
 
-	Window::GLFW3class* Window::GLFW3 = nullptr;
+	static void errcb	(int, const char* c) {
+		fprintf(stderr, "GLFW Error %s!", c);
+	}
+
+	static inline void initglfw() {
+		glfwSetErrorCallback(errcb);
+		glfwInit();
+	}
 
 	Window::Window() {
-		if (!GLFW3) {
-			GLFW3 = new GLFW3class();
-			if (!GLFW3)	throw "glfw3fuck";	
-		};
-		GLFW3->refinc();
+		initglfw();
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GALOGEN_API_VER_MAJ);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);

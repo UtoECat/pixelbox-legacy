@@ -148,91 +148,90 @@ namespace pixelbox {
 		return *((const T*)p);
 	}
 
-	static inline uint32_t hashkey_cast(const chunk_position& pos) {
-		//if (sizeof(uint32_t) == sizeof(chunk_position)) {
-			// fast one
-		//	return dirty_cast<uint32_t, chunk_position>(pos);
-		//} else {// slow one
-			uint32_t a = dirty_cast<uint16_t>(pos.x);
-			uint32_t b = dirty_cast<uint16_t>(pos.y);
-			return a | (b << 16);
-		//}
-	}
-
 	using size_t = std::size_t;
 
-	template <unsigned int HSZ = HASH_SIZE, unsigned int CNT = CHUNKS_HEAP_COUNT>
-	class ChunkTable {
+	using void_type = struct {};
+
+	template <typename T>
+	struct hash_manager {
+		using key_type = void_type;
+		static constexpr bool implemented = false;
+	};
+
+	static_assert(sizeof(uint32_t) == sizeof(chunk_position));
+
+	template<>
+	struct hash_manager<Chunk> {
+		using key_type = chunk_position;
+		static inline key_type getkey(Chunk& c) {
+			return c.position;
+		}
+		static inline uint32_t hash(key_type k) {
+			return dirty_cast<uint32_t, chunk_position>(k);
+		}
+		static constexpr bool implemented = true;
+	};
+
+	template <typename T, unsigned int HSZ = HASH_SIZE>
+	class HashTable {
 		public :
+		using hashman = hash_manager<T>;
+		static_assert(hashman::implemented == true);
 		struct Node {
 			Node* next = nullptr;
-			Chunk value;
+			T value;
 			public:
 			Node() = default;
-			Node(chunk_position pos) : value(pos) {}
-			inline uint32_t getKey() {
-				return hashkey_cast(value.position);
+
+			template<typename... _Args>
+			Node(_Args&&... __args) : value(std::forward<_Args>(__args)...) {}
+
+			inline uint32_t getHash() {
+				return hashman::hash(hashman::getkey(value));
 			}
 		};
 		protected :
-		Bump<Node, CNT> allocator;
-		Node* hash[HSZ] = {nullptr};
+		Bump<Node> allocator;
+		Node* table[HSZ] = {nullptr};
 		public:
-		ChunkTable() = default;
-		~ChunkTable() = default;
-		ChunkTable(const ChunkTable&) = delete;
+		HashTable() = default;
+		~HashTable() = default;
+		HashTable(const HashTable&) = delete;
 		public:
-		Chunk* rawget(chunk_coord x, chunk_coord y) {
-			return rawget((chunk_position){x, y});
-		}
-
 		inline Node** data() {
-			return hash;
+			return table;
 		};
-
 		inline size_t size() const {
 			return HSZ;
 		}
-
-		Chunk* rawget(chunk_position pos) {
-			uint32_t key = hashkey_cast(pos);
-			key = hash_function(key, HSZ);
-			Node* n = hash[key];
-			while (n != nullptr && n->value.position != pos) {
+		T* rawget(typename hashman::key_type key) {
+			uint32_t hh = hashman::hash(key);
+			hh = hash_function(hh, HSZ);
+			Node* n = table[hh];
+			while (n != nullptr && hashman::getkey(n->value) != key) {
 				n = n->next;
 			}
 			return n ? &(n->value) : nullptr;
 		}
-
-		Chunk* newchunk(chunk_position pos) {
-			Node* newnode = allocator.create(pos); // see Node::Node(chunk_position)
-			uint32_t key = hashkey_cast(pos);
-			key = hash_function(key, HSZ);
-			Node* n = hash[key];
-			if (!n) {
-				hash[key] = newnode; 
-			} else {
-				while (n->next != nullptr) {
-					n = n->next;
-				}
-				n->next = newnode;
-			}
+		
+		template<typename... _Args>
+		T* newitem(_Args&&... __args) {
+			Node* newnode = allocator.create(std::forward<_Args>(__args)...);
+			uint32_t hh = hashman::hash(hashman::getkey(newnode->value));
+			hh = hash_function(hh, HSZ);
+			// insert into list
+			newnode->next = table[hh];
+			table[hh]     = newnode; 
 			return &(newnode->value);
 		}
 
-		void remove (Chunk* c) {
-			removeExt(c);
-		}
-
-		Node* removeExt (Chunk* c) {
-			chunk_position pos = c->position;	
-			uint32_t key = hashkey_cast(pos);
-			key = hash_function(key, HSZ);
-			Node* n = hash[key];
-
+		Node* remove (T* c) {
+			uint32_t hh = hashman::hash(hashman::getkey(*c));
+			hh = hash_function(hh, HSZ);
+			Node* n = table[hh];
 			if (!n) throw "no chunks with the same hash in the table AT ALL!!!";
 			if (&(n->value) == c) { // same chunk pointer at the beginning :p
-				hash[key] = n->next;  // remove current node
+				table[hh] = n->next;  // remove current node
 			} else {
 				Node* p = n;
 				n = n->next;
@@ -249,5 +248,8 @@ namespace pixelbox {
 		};
 
 	};
+
+	template <unsigned int HSZ = HASH_SIZE>
+	using ChunkTable = HashTable<Chunk, HSZ>;
 
 };

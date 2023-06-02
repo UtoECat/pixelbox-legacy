@@ -35,8 +35,8 @@ namespace pixelbox {
 	}
 
 	PCGRandom World::getWGenRNGState(Chunk* c) {
-		uint32_t key = hashkey_cast(c->position);
-		return PCGRandom(seed + key); // easy
+		uint32_t hh = hash_manager<Chunk>::hash(c->position);
+		return PCGRandom(seed + hh); // easy
 	}
 
 	// render 
@@ -100,7 +100,7 @@ namespace pixelbox {
 	}
 
 	void World::loadChunk(Chunk* c) {
-		uint32_t key = hashkey_cast(c->position);
+		uint32_t key = hash_manager<Chunk>::hash(c->position);
 		if (storage) try {
 			if (storage->getBinary(key, c->data,
 					CHUNK_WIDTH * CHUNK_HEIGHT * sizeof(Atom))) return;
@@ -111,7 +111,7 @@ namespace pixelbox {
 	};
 	
 	void  World::saveChunk(Chunk* c) {
-		uint32_t key = hashkey_cast(c->position);
+		uint32_t key = hash_manager<Chunk>::hash(c->position);
 		if (storage) try {
 			if (storage->setBinary(key, c->data,
 					CHUNK_WIDTH * CHUNK_HEIGHT * sizeof(Atom))) return;
@@ -200,7 +200,7 @@ namespace pixelbox {
 	Chunk* World::getChunk(chunk_position pos) {
 		Chunk* c = table.rawget(pos);
 		if (!c) {
-			c = table.newchunk(pos);
+			c = table.newitem(pos);
 			c->markUpdate(); // update when firstly loaded
 			loadChunk(c);
 		}	
@@ -220,7 +220,7 @@ namespace pixelbox {
 				if (!n->value.usage_amount) {
 					// collect
 					saveChunk(&(n->value));
-					n = table.removeExt(&(n->value));
+					n = table.remove(&(n->value));
 				} else {
 					n = n->next;
 				}
@@ -260,14 +260,19 @@ namespace pixelbox {
 		}
 	}
 
+	static inline chunk_coord C2W_cast(int32_t pos, chunk_coord scale) {
+		return (chunk_coord)((pos / (int32_t)scale));
+	}
 
 	void World::render() {
 		// use program
 		init_shader_program();
 
 		// calcualte chunks to draw
-		chunk_position from = {camx/CHUNK_WIDTH, camy/CHUNK_HEIGHT};
-		chunk_position to   = {(camx+camw)/CHUNK_WIDTH, (camy+camh)/CHUNK_HEIGHT};
+		chunk_position from = {C2W_cast(camx-CHUNK_WIDTH, CHUNK_WIDTH),
+			C2W_cast(camy-CHUNK_WIDTH, CHUNK_HEIGHT)};
+		chunk_position to   = {C2W_cast(camx+camw, CHUNK_WIDTH),
+			C2W_cast(camy+camh, CHUNK_HEIGHT)};
 
 		// used later in loop
 		float halfw = camw/2.0;

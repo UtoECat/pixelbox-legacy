@@ -23,29 +23,7 @@
 namespace pixelbox {
 
 	class Window {
-		private:
-		class GLFW3class {
-			friend class Window;
-			private:
-			size_t refcnt = 0;
-			static void errcb	(int, const char* c) {
-				fprintf(stderr, "GLFW Error %s!", c);
-			}
-			public:
-			GLFW3class() {
-				glfwSetErrorCallback(errcb);
-				if (glfwInit() != GLFW_TRUE) throw "can't load GLFW3!";
-				fprintf(stderr, "GLFW3 : OK (%p)\n", this);
-			}
-			~GLFW3class() {
-				glfwTerminate();
-			}
-			void refinc() {refcnt++;};
-			void refdec() {refcnt--; if (!refcnt) delete this;}
-		};
-		protected:
-		static GLFW3class *GLFW3;
-		static void (resizecb) (GLFWwindow*, int w, int h) {
+			static void (resizecb) (GLFWwindow*, int w, int h) {
 			glViewport(0, 0, w, h);
 		}
 		GLFWwindow *W = nullptr;
@@ -53,7 +31,6 @@ namespace pixelbox {
 		Window();
 		~Window() {
 			glfwDestroyWindow(W);	
-			GLFW3->refdec();
 		}
 		void begin() {
 			glfwSwapBuffers(W);
