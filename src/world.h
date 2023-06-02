@@ -31,12 +31,17 @@ namespace pixelbox {
 	using std::filesystem::path;
 
 	class World {
+		protected:
 		chunk_position        spawn_pos;
 		ChunkTable<HASH_SIZE> table;
 		Storage*              storage;
 		GLuint      textures[16] = {0};
 		GLuint             program = 0;
 		uint64_t              seed = 0;
+		protected : // GC
+		float old_usage = 0.1; // how many memory was used last time?
+		float    target = 0.1; // when to run GC?
+		int    without_gc = 0; // ticks without collecting garbage
 		public:
 		using hashTable = ChunkTable<HASH_SIZE>;
 		int32_t     camx, camy, camw, camh;
@@ -73,7 +78,7 @@ namespace pixelbox {
 		/*
 		 * Collects, saves and frees all unused chunks
 		 */
-		void   collectGarbage(void);
+		void   collectGarbage(bool force = false);
 
 		/*
 		 * Unloads all chunks.

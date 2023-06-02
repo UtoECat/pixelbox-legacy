@@ -20,12 +20,25 @@
 #include <sqlite3.h>
 #include <cstdio>
 #include <string>
+#include <memory>
+#include "utils.h"
+#include <mutex>
 
 namespace pixelbox {
-	
+
+	struct WriteNode {
+		WriteNode *next;
+		uint32_t id;
+		size_t len;
+		std::unique_ptr<char[]> value;
+	};
+
 	class Storage {
 		protected:
 		sqlite3* db = nullptr;
+		Bump<WriteNode> wallocator;
+		WriteNode* writelist = nullptr;
+		std::mutex wmutex, mthread;
 		public:
 		Storage(const char* name = ":memory:"); 
 		~Storage();
@@ -153,5 +166,20 @@ namespace pixelbox {
 		// not crash ourselves in case of DB corruption or malicious DB.
 		bool setBinary(uint32_t key, const void* data, size_t size);
 		bool getBinary(uint32_t key, void* data, size_t size); 
+		public :
+		// need to be called in the new thread :)
+		void processWrites(bool);
+		void writeAsync(uint32_t key, void* data, size_t size);
+		bool working();
+		private:
+		bool working_flag = false;
+		void lock();
+		void unlock();
+		void set_working(bool status);
+		public :
+		bool asyncThreadShouldWork();
+		void startAsyncThread();
+		void syncAsyncThread();
+		void stopAsyncThread();
 	};
 };

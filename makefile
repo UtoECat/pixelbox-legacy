@@ -9,9 +9,9 @@ COMPILER ?= $(CXX)
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
 
-DEBUG = 1
+DEBUG = 0
 
-ifdef DEBUG
+ifeq (DEBUG,1)
 CCFLAGS = -O0 -Wall -Wextra -g
 UNIFLAGS = -fsanitize=address -fsanitize=undefined
 else

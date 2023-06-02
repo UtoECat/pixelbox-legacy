@@ -44,13 +44,14 @@ namespace pixelbox {
 		protected:
 		struct Object {
 			bool used = false;
-			uint64_t redzone[2] = {0};
+			char alligh[alignof(T)-1];
 			char data[sizeof(T)];
 		};
 
 		protected:
 		Object bump[CNT];
 		unsigned int last_freed = 0;
+		unsigned int count = 0;
 		public:
 		Bump() = default;
 		Bump(const Bump&) = delete;
@@ -66,10 +67,9 @@ namespace pixelbox {
 			for (unsigned int i = last_freed; i < CNT; i++) {
 				Object *o = &(bump[i]);
 				if (!o->used) {
-					if (o->redzone[0] != 0 || o->redzone[1] != 0) 
-						throw "heap corruption!";
 					o->used = true;
 					last_freed = i;
+					count++;
 					return (T*)o->data;
 				}
 			}
@@ -87,6 +87,20 @@ namespace pixelbox {
 			if (!ptr) throw "NOMEM";
 			return ::new((void*)ptr) T(std::forward<_Args>(__args)...);
 		}
+
+		/*
+		 * Returns count of used memory. Used by GC.
+		 */
+		unsigned int usage() {
+			return count;
+		}
+
+		/*
+		 * Returns size of the heap. Used by GC.
+		 */
+		unsigned int size() {
+			return CNT;
+		}
 		
 		/**
 		 * deallocates memory for object T, allocated previously from this
@@ -101,13 +115,11 @@ namespace pixelbox {
 		void dealloc(T* ptr) {
 			char* p = (char*)ptr;
 			if (p == nullptr) return;
-			// offsetof() ?
-			// constexpr should guarantee that this shit will not break runtime at least...
 			using std::size_t;
 			constexpr size_t offset = offsetof(Object, data);
 			p = p - offset;
 			Object* o = (Object*) p;
-			if (BUMP_DEBUG) { // pointer magic here :D
+			/*if (BUMP_DEBUG) { // pointer magic here :D
 				if (o < bump || o > bump + CNT) throw "pointer is out of bump";
 				if (((size_t)bump - (size_t)o) % alignof(Object) != 0) {
 					fprintf(stderr, "ERR: bad poiner alligment given in BumpAllocator::free()\n");
@@ -115,9 +127,11 @@ namespace pixelbox {
 						(void*)(((size_t)o/alignof(Object))*alignof(Object)));
 				}
 				if (!o->used) throw "double dealloc";
-			}
+			} */
 			o->used = false;
-			if ((unsigned int)(bump - o) < last_freed) last_freed = (unsigned int)(bump - o);
+			if ((unsigned int)(bump - o) < last_freed) 
+				last_freed = (unsigned int)(bump - o);
+			count--;
 		}
 	
 		/**
@@ -212,6 +226,13 @@ namespace pixelbox {
 				n = n->next;
 			}
 			return n ? &(n->value) : nullptr;
+		}
+
+		/*
+		 * for GC :з
+		 */
+		float usage() {
+			return (float)allocator.usage()/(float)allocator.size();
 		}
 		
 		template<typename... _Args>

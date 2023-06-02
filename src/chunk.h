@@ -27,8 +27,8 @@ namespace pixelbox {
 	constexpr atom_coord CHUNK_WIDTH  = 32;
 	constexpr atom_coord CHUNK_HEIGHT = 32;
 
-	constexpr unsigned char KEEP_LOADED_TIMES = 3;
-	constexpr unsigned int  CHUNKS_HEAP_COUNT = 512;
+	constexpr unsigned char KEEP_LOADED_TIMES = 50;
+	constexpr unsigned int  CHUNKS_HEAP_COUNT = 1024;
 
 	typedef struct alignas(alignof(uint32_t)) chunk_position {
 		chunk_coord x;

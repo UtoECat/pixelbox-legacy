@@ -22,6 +22,7 @@
 #include <cstdio>
 #include "worldgen.h"
 #include <cstring>
+#include <math.h>
 
 namespace pixelbox {
 
@@ -84,10 +85,6 @@ namespace pixelbox {
 			GL_RG, GL_UNSIGNED_BYTE, c->data);
 	}
 
-	// load/save chunks
-	static const char* signature_string = "\033PBC";
-	static const uint32_t SIGNATURE = *((const int*)(signature_string));
-
 };
 
 namespace pixelbox {
@@ -113,88 +110,16 @@ namespace pixelbox {
 	void  World::saveChunk(Chunk* c) {
 		uint32_t key = hash_manager<Chunk>::hash(c->position);
 		if (storage) try {
-			if (storage->setBinary(key, c->data,
+			/*if (storage->setBinary(key, c->data,
 					CHUNK_WIDTH * CHUNK_HEIGHT * sizeof(Atom))) return;
+			*/
+			storage->writeAsync(key, c->data, CHUNK_WIDTH *
+				CHUNK_HEIGHT * sizeof(Atom));
 		} catch (const char* s) {
 			fprintf(stderr, "%s\n", s);
 		}	
 		// can't save, do nothing
 	};
-
-	/*
-	static const char* getfilename(path& dir, uint32_t id) {
-		static path tmp;
-		char fname[64];	
-		uint64_t full = id;
-		snprintf(fname, 63, "%li.dat", full);
-		tmp = dir;
-		tmp /= fname;
-		return tmp.c_str();
-	}
-
-	void World::loadChunk(Chunk* c) {
-		uint32_t key = hashkey_cast(c->position);
-		if (!dir.empty()) { // try load from file
-			const char* fname = getfilename(dir, key);
-			FILE* f = fopen(fname, "rb");
-			int cnt = 0;
-			if (f) {
-				// check file signature
-				uint32_t sig = 0;
-				if (fread(&sig, sizeof(uint32_t), 1, f) <= 0 || sig != SIGNATURE) {
-					perror("Bad file signature : invalid, corrupted file, or different endianess");
-					goto loaderr;
-				}
-				
-				// read data
-				cnt = fread(c->data, sizeof(Atom), CHUNK_WIDTH * CHUNK_HEIGHT, f);
-				if (cnt != CHUNK_WIDTH * CHUNK_HEIGHT) {
-					perror("Chunk file has bad length!");
-					goto loaderr;
-				}
-				fclose(f);
-				return; // success
-				loaderr:
-				fclose(f);
-			}
-			// can't load, generate chunk instead
-		}
-		generateChunk(c);
-	};
-
-	void  World::saveChunk(Chunk* c) {
-		uint32_t key = hashkey_cast(c->position);
-		if (!dir.empty()) { // try load from file
-			const char* fname = getfilename(dir, key);
-			FILE* f = fopen(fname, "wb");
-			int cnt = 0;
-			if (f) {
-				// write file signature
-				if (fwrite(&SIGNATURE, sizeof(uint32_t), 1, f) <= 0) {
-					perror("Can;t write to the file");
-					goto loaderr;
-				}
-				
-				// write data
-				cnt = fwrite(c->data, sizeof(Atom), CHUNK_WIDTH * CHUNK_HEIGHT, f);
-				if (cnt != CHUNK_WIDTH * CHUNK_HEIGHT) {
-					perror("Can't write chunk to the file!");
-					goto loaderr;
-				}
-				fflush(f);
-				fclose(f);
-				return; // success
-				loaderr:
-				fclose(f);
-				remove(fname);
-			} else {
-				perror("Can't open file to save chunk!");
-				fprintf(stderr, "filename : %s\n", fname);				
-			};
-		};
-		// can't save, do nothing
-	};
-	*/
 
 	// highlevel
 	Chunk* World::getChunk(chunk_position pos) {
@@ -208,16 +133,51 @@ namespace pixelbox {
 		return c;
 	}
 
-	void   World::collectGarbage(void) {
+	void   World::collectGarbage(bool force) {
 		// raw acess to the hash table
 		World::hashTable::Node** data = table.data();
 		World::hashTable::Node* n = nullptr;
+		without_gc++; // inrease anyway
 
+		float usage = table.usage();
+
+		constexpr float hard_minimum = 0.2; // minimum to run
+		static_assert(hard_minimum > 0.1 && hard_minimum < 0.9);
+		static_assert(KEEP_LOADED_TIMES > 2); // needed for modern GC
+
+		if (force) goto skipcheck;
+
+		// don't run too often :), it has no sense
+		if ((usage < target && usage < 0.5 && without_gc < 200) ||
+			usage < hard_minimum) return; 
+		skipcheck:
+
+		// save new old usage
+		float old = old_usage;
+		old_usage = usage;
+
+		float olddiff = usage - old;
+
+		// set decrease level by encounting how much heap is used.
+		int decrease;
+		{
+		float k = usage;
+		k -= hard_minimum;
+		k *= 1 + 1 * hard_minimum * 2;
+		if (olddiff > 0) k += olddiff / 3; 
+		if (k < 0) k = 0; else if (k > 1) k = 1; // failchecks
+		decrease = floor(k * (KEEP_LOADED_TIMES-1)) + 1;
+		}
+
+		// collect
 		for (size_t i = 0; i < table.size(); i++) {
 			n = data[i];
 			while (n) {
-				n->value.usage_amount--;
-				if (!n->value.usage_amount) {
+				int tmp = n->value.usage_amount;
+				tmp -= decrease;
+				if (tmp < 0) tmp = 0;
+				n->value.usage_amount = tmp;
+				if (!tmp) {
 					// collect
 					saveChunk(&(n->value));
 					n = table.remove(&(n->value));
@@ -226,11 +186,51 @@ namespace pixelbox {
 				}
 			}
 		};
+
+		// calculate differenses
+		float before = usage;
+		usage = table.usage();
+
+		// increase/decrease target
+		float diff = usage - before;
+		float tk = (target/15.0);
+		const char* stat = "nul";
+
+		if ((olddiff <= -0.001 && target > usage + tk*2) && without_gc > 100) {
+			// decrease target
+			target -= olddiff*0.5 + tk;
+			if (target <= usage) target = usage + tk;
+			if (target < hard_minimum) target = hard_minimum;
+			stat = "dec";
+		} // else increase
+		else if ((olddiff > 0.001 && usage > target)) {
+			if (target < usage) target = usage;
+			target += fabs(olddiff) * 2;
+			if (target > 0.9) target = 0.9;
+			stat = "inc";
+		} else {
+			stat = "nul";
+			// nothing
+		}
+		fprintf(stderr,  "[GCLOG] : oldUsage=%f, newUsage=%f, "
+				"target=%f (%s)! timeout=%i, --%i!\n",old, usage, target,
+				stat, without_gc, decrease);
+		without_gc = 0; // ok
 	}
 
 	void World::unloadAll() {
-		for (int i = 0; i <= KEEP_LOADED_TIMES + 1; i++)
-			collectGarbage();
+		World::hashTable::Node** data = table.data();
+		World::hashTable::Node* n = nullptr;
+		// collect
+		for (size_t i = 0; i < table.size(); i++) {
+			n = data[i];
+			while (n) {
+				n->value.usage_amount = 0;
+				saveChunk(&(n->value));
+				n = table.remove(&(n->value));
+			}
+		}
+		if (table.usage() != 0.0) throw "can't collect all chunks!";
 	}
 
 	World::~World() {}
