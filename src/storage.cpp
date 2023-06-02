@@ -158,13 +158,15 @@ namespace pixelbox {
 		WriteNode* list = writelist, *n;
 		if (!list) goto skip;
 		working_flag = (list != nullptr);
-		// process only limited number of tasks
-		n = list;
-		for (int i = 0; i < 10 && n->next; i++) {
-			n = n->next;
-		}
-		writelist = n->next;
-		n->next = nullptr; // end list just here
+		if (real) {
+			// process only limited number of tasks
+			n = list;
+			for (int i = 0; i < 10 && n->next; i++) {
+				n = n->next;
+			}
+			writelist = n->next;
+			n->next = nullptr; // end list just here
+		} else writelist = nullptr;
 		skip:
 		unlock();
 

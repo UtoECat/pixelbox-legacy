@@ -6,6 +6,7 @@ World w;
 
 #include <assert.h>
 #include <window.h>
+#include <math.h>
 
 static inline chunk_coord C2W_cast(int32_t pos, chunk_coord scale) {
 	if (pos < 0) pos -= scale;
@@ -14,7 +15,9 @@ static inline chunk_coord C2W_cast(int32_t pos, chunk_coord scale) {
 
 static inline atom_coord inchunkpos(int32_t pos, chunk_coord scale) {
 	int32_t div = pos % (int32_t)scale;
-	if (div < 0) div = scale + div;
+	if (pos < 0) div += scale-1;
+	if (div < 0) throw "fuck negative";
+	if (div >= scale) throw "fuck positive";
 	return (atom_coord)div;
 }	
 
@@ -53,12 +56,30 @@ void WorldProcessFunction() {
 	w.collectGarbage();
 }
 
-void GUIFunction() {
-	glBegin(GL_TRIANGLES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(-0.5, 0, 0);
-	glVertex3f(-0.5, -0.5, 0);
+void drawRectangle(int x, int y, int w, int h) {
+	glBegin(GL_POLYGON);
+	glVertex2f(x, y);
+	glVertex2f(x+w,y);
+	glVertex2f(x+w, y+h);
+	glVertex2f(x, y+h);
 	glEnd();
+}
+
+Storage * storptr;
+
+void GUIFunction() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, w.camw, w.camh, 0, 100, -100);
+	glMatrixMode(GL_MODELVIEW);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
+	glLoadIdentity();
+
+	if (storptr->working())
+		glColor4f(1, 1, 1, 1);
+	else glColor4f(1, 1, 0, 1);
+	drawRectangle(20, 10, 20, 20);
 }
 
 void UserInputFunction() {
@@ -93,6 +114,7 @@ void UserInputFunction() {
 
 int mmain() {
 	Storage storage("./world.db");
+	storptr = &storage;
 	storage.startAsyncThread();
 	w.setStorage(&storage);
 	w.setCamera(camx, camy, 100, 100);

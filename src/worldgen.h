@@ -26,19 +26,11 @@ namespace pixelbox {
 		auto rand = getWGenRNGState(c);
 		for (atom_coord x = 0; x < CHUNK_WIDTH; x++) {
 			for (atom_coord y = 0; y < CHUNK_HEIGHT; y++) {
-				if (x == 0 || x == CHUNK_WIDTH-1) {
-					(*c)[x][y] = (Atom){31 | ((rand()%3)<<6), 255};
-				} else if (y == 0 || y == CHUNK_HEIGHT-1) {
-					(*c)[x][y] = (Atom){63 | ((rand()%3)<<6), 255};
-				} else {
-					//(*c)[x][y] = (Atom){rand()%256, rand()};
-					(*c)[x][y] = (Atom){0, rand()};
-				}
+				//(*c)[x][y] = (Atom){rand()%256, rand()};
+				(*c)[x][y] = (Atom){0, rand()};
 			}
 		}
-		for (atom_coord x = 2; x <= 4; x++)
-			for (atom_coord y = 2; y <= 4; y++) {
-				(*c)[x][y] = (Atom){7 | (1<<6), 255};
-		}
-	};
+	}
+
+
 };
