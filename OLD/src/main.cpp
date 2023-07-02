@@ -16,12 +16,8 @@ static inline chunk_coord C2W_cast(int32_t pos, chunk_coord scale) {
 static inline atom_coord inchunkpos(int32_t pos, chunk_coord scale) {
 	int32_t div = pos % (int32_t)scale;
 	if (pos < 0) div += scale-1;
-	if (div < 0) throw "fuck negative";
-	if (div >= scale) throw "fuck positive";
 	return (atom_coord)div;
 }	
-
-
 
 // RAII window
 Window win;
@@ -82,19 +78,40 @@ void GUIFunction() {
 	drawRectangle(20, 10, 20, 20);
 }
 
+// original taken from : https://gist.github.com/bert/1085538
+// highly modified for my purposes. WARNING: works for one chunk ONLY
+void chunkPlotLine (int x0, int y0, int x1, int y1) {
+  int dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
+  int dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1; 
+  int err = dx + dy, e2; /* error value e_xy */
+ 
+	chunk_position oldpos = {C2W_cast(x0, CHUNK_WIDTH), C2W_cast(y0, CHUNK_HEIGHT)};
+	Chunk* c = w.getChunk(oldpos);
+  for (;;){  /* loop */
+		chunk_position pos = {C2W_cast(x0, CHUNK_WIDTH), C2W_cast(y0, CHUNK_HEIGHT)};
+		if (pos != oldpos) c = w.getChunk(pos);
+		atom_coord ax = inchunkpos(x0, CHUNK_WIDTH),
+							 ay = inchunkpos(y0, CHUNK_HEIGHT);
+		int16_t rngnum = c->getRandom();
+		Atom atom = {kind | ((rngnum & 3) << 6), rngnum ^ (rngnum * 345678)};
+    (*c)[ax][ay] = atom;
+
+    if (x0 == x1 && y0 == y1) break;
+    e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+    if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+  }
+}
+
 void UserInputFunction() {
 	int32_t mx = win.getMouseX()/4;
 	int32_t my = win.getMouseY()/4;
 	if (win.getButton(0)) {
 		int32_t wx = w.camx + mx;
+		int32_t owx = w.camx + oldmx;
 		int32_t wy = w.camy + my;
-		chunk_position pos = {C2W_cast(wx, CHUNK_WIDTH),
-		C2W_cast(wy, CHUNK_HEIGHT)};
-		atom_coord ax = inchunkpos(wx, CHUNK_WIDTH),
-							 ay = inchunkpos(wy, CHUNK_HEIGHT);
-		Chunk *c = w.getChunk(pos);
-		int16_t rngnum = c->getRandom();
-		(*c)[ax][ay] = (Atom){kind | ((rngnum & 3) << 6), rngnum ^ (rngnum * 345678)};
+		int32_t owy = w.camy + oldmy;
+		chunkPlotLine(owx, owy, wx, wy);
 	}
 	if (win.getButton(1)) {
 		int32_t dx = oldmx - mx;

@@ -40,13 +40,17 @@ namespace pixelbox {
 		bool operator!=(const chunk_position& pos) const {
 			return x != pos.x || y != pos.y;
 		}
+		uint32_t hash() {
+			return *(reinterpret_cast<uint32_t*>(this));
+		}
 	} chunk_position;
 
 	struct Chunk {
-		bool           need_update = true; // by default 
 		uint16_t       rng_state = 32722;
+		bool           need_update = true;
+		bool           is_loading  = true; // chunk is still loading from disk
+		bool           is_frozen   = false; // chunk processing is not finished
 		unsigned char  usage_amount = KEEP_LOADED_TIMES; 
-		// theese below are constructed when needed
 		Atom           data[CHUNK_WIDTH * CHUNK_HEIGHT];
 		chunk_position position;
 		public :

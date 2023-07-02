@@ -147,6 +147,7 @@ namespace pixelbox {
 
 		if (force) goto skipcheck;
 
+		if (target - usage > 0.5) goto skipcheck;
 		// don't run too often :), it has no sense
 		if ((usage < target && usage < 0.5 && without_gc < 200) ||
 			usage < hard_minimum) return; 
@@ -196,7 +197,7 @@ namespace pixelbox {
 		float tk = (target/15.0);
 		const char* stat = "nul";
 
-		if ((olddiff <= -0.001 && target > usage + tk*2) && without_gc > 100) {
+		if ((olddiff <= -0.001 || target > usage + tk*2)) {
 			// decrease target
 			target -= olddiff*0.5 + tk;
 			if (target <= usage) target = usage + tk;

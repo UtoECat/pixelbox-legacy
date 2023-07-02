@@ -161,7 +161,7 @@ namespace pixelbox {
 		if (real) {
 			// process only limited number of tasks
 			n = list;
-			for (int i = 0; i < 10 && n->next; i++) {
+			for (int i = 0; i < 5 && n->next; i++) {
 				n = n->next;
 			}
 			writelist = n->next;
@@ -171,7 +171,6 @@ namespace pixelbox {
 		unlock();
 
 		if (!list) return;
-		if (real) fprintf(stderr, "[Writer] : list %p aqquired!\n", list); 
 		
 		// do at first
 		n = list;
@@ -184,7 +183,6 @@ namespace pixelbox {
 			}
 			n = n->next;
 		}
-		if (real) fprintf(stderr, "[Writer] : job done! freeing list %p...\n", list); 
 
 		// then free
 		n = list;
@@ -198,7 +196,6 @@ namespace pixelbox {
 		unsigned int used = wallocator.usage();
 		working_flag = false;
 		unlock();
-		if (real)fprintf(stderr, "[Writer] : all done! Usage %i!\n", used); 
 	}
 
 	
@@ -246,7 +243,7 @@ static void _SetThreadName( const char* threadName)
   prctl(PR_SET_NAME,threadName,0,0,0);
 }
 #else
-#define _SetThreadName()
+#define _SetThreadName(...)
 #endif
 
 #include <chrono>

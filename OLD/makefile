@@ -2,11 +2,20 @@
 BUILD_DIR ?= ./build
 BINARY_DIR ?= ./
 SRC_DIRS ?= ./src 
-INC_DIRS ?= ./src
+INC_DIRS ?= ./src ./include
 
+PLATFORM ?= LINUX
+
+ifeq ($(PLATFORM),WINDOWS)
+COMPILER ?= x86_64-w64-mingw32-g++
+TARGET_NAME ?= pixelbox.exe
+LDLIBS= -static -lsqlite3 -fstack-protector -lstdc++ -lwinpthread -lopengl32 -lgdi32 -luser32 ./libglfw3dll.a -lglew32
+BUILD_DIR := ./buildwin
+else
 TARGET_NAME ?= pixelbox
-COMPILER ?= gcc
-LDLIBS= -lGL -lm -lsqlite3 -lraylib
+COMPILER ?= $(CXX)
+LDLIBS= -lGL -lm -lsqlite3 -lglfw
+endif
 
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
@@ -14,16 +23,15 @@ RM       ?= rm
 DEBUG = 1
 
 ifeq ($(DEBUG),1)
-CCFLAGS  = -O0 -Wall -Wextra -g -DPBOX_DEBUG=1 
-UNIFLAGS = -fsanitize=address -fsanitize=undefined
+CCFLAGS = -O0 -Wall -Wextra -g
 else
-CCFLAGS  = -O2 -Wall -DPBOX_DEBUG=0
+CCFLAGS = -O2 -Wall
 UNIFLAGS = -flto
 endif
 
 # no edit!
 TARGET = $(BINARY_DIR)/$(TARGET_NAME)
-SRCS := $(shell find $(SRC_DIRS) -name '*.c' -or -name '*.cpp')
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 INC_FILES := $(shell find $(INC_DIRS) -type d) 
@@ -45,12 +53,6 @@ $(TARGET): $(OBJS)
 	@$(COMPILER) $(OBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
 
 # c source
-$(BUILD_DIR)/%.c.o: %.c
-	@echo "[MAKE] Building $<"
-	@$(MKDIR_P) $(dir $@)
-	$(COMPILER) $(CCFLAGS) $(UNIFLAGS) -c $< -o $@
-
-# cpp source
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@echo "[MAKE] Building $<"
 	@$(MKDIR_P) $(dir $@)
