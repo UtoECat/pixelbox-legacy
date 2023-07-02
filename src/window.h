@@ -76,6 +76,8 @@ pbWindow* pbWindowClone(const pbWindow* src, PBOX_SIZE_T size);
 void      pbWindowFree (pbWindow* w); 
 
 // Window implemented here
+pbWindow* pbExplorerWindowStatic(void);
 pbWindow* pbDebugWindowCreate(void);
+pbWindow* pbDebugWindowToggle();
 pbWindow* pbBlankWindowCreate(void);
 pbWindow* pbSuspiciousWindowCreate(void);

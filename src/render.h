@@ -21,3 +21,6 @@
 int  pbRenderCreate();
 void pbRenderSetFullscreen(int v);
 void pbRenderDestroy(void);
+
+int GuiLoadTheme();
+int GuiToggleTheme();

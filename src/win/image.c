@@ -22,8 +22,8 @@
 
 // debug window implementation
 
-int refcnt = 0;
-Texture sus;
+static int refcnt = 0;
+static Texture sus;
 
 static int debug_create(pbWindow* W) {
 	if (!refcnt) {

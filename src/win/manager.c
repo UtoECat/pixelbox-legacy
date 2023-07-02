@@ -289,7 +289,12 @@ static int pbWindowRender (pbWindow* win, int update) {
 		int res = 0;
 		if (win->flags & PBOX_WINDOW_NORMAL) {
 			GuiPanel(windowPanel, NULL); // Draw window base
-			if (win->xRender) res = win->xRender(win, windowPanel, update); // and content
+			// and content
+			if (win->xRender) {
+				BeginScissorMode(windowPanel.x, windowPanel.y, windowPanel.width, windowPanel.height);	
+				res = win->xRender(win, windowPanel, update);
+				EndScissorMode();
+			}
 			if (!(win->flags & PBOX_WINDOW_PINNED) && !GuiIsLocked()) {
 				DrawTriangle(
 					(Vector2){scaleDot.x,              (float)(win->y + win->h)},
@@ -318,10 +323,9 @@ void pbWinManRender() {
 
 	const char* txt;
 	if (WM->array) {
- 		txt	= TextFormat("#%i = {%p, %p, %p, %p} : %p", WM->count, 
-			WM->array[0], WM->array[1], WM->array[2], WM->array[3], WM->select);
+ 		txt	= TextFormat("#%i active windows", WM->count);
 	}
-	DrawText(txt, 0, 0, 20, WHITE);
+	DrawText(txt, 0, 0, 10, WHITE);
 
 	int need_to_collect = 0;
 

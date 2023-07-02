@@ -21,8 +21,12 @@
 
 // debug window implementation
 
+static pbWindow* once = PBOX_CAST(pbWindow*, PBOX_NULL);
+
 static int debug_create(pbWindow* W) {
-	
+	if (once) return -1;
+	once = W;
+	return 0;	
 }
 
 static int debug_render(pbWindow* w, Rectangle rect, int input) {
@@ -38,7 +42,7 @@ static int debug_render(pbWindow* w, Rectangle rect, int input) {
 }
 
 static void debug_destroy(pbWindow* w) {
-
+	once = PBOX_CAST(pbWindow*, PBOX_NULL);
 }
 
 static const pbWindow debug_window = {
@@ -53,4 +57,9 @@ static const pbWindow debug_window = {
 
 pbWindow* pbDebugWindowCreate() {
 	return pbWindowClone(&debug_window, sizeof(pbWindow));
+}
+
+pbWindow* pbDebugWindowToggle() {
+	if (!once) pbWinManAdd(&debug_window, sizeof(pbWindow));
+	else once->flags |= PBOX_WINDOW_CLOSED;
 }

@@ -19,8 +19,6 @@
 #include "render.h"
 #include "config.h"
 
-void GuiLoadStyleDark(void);
-
 int  pbRenderCreate() {
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_ALWAYS_RUN
 		| FLAG_WINDOW_RESIZABLE);
@@ -30,7 +28,7 @@ int  pbRenderCreate() {
 	if (!IsWindowReady()) return -1;
 	SetExitKey(KEY_NULL);
 	//SetTargetFPS(60);
-	GuiLoadStyleDark();
+	GuiLoadTheme();
 	return 0;
 }
 

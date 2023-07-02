@@ -870,6 +870,8 @@ typedef enum {
 
 #endif
 
+void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint);         // Gui draw text using default font
+
 #if defined(__cplusplus)
 }            // Prevents name mangling of functions
 #endif
@@ -1308,7 +1310,6 @@ static int GetTextWidth(const char *text);                      // Gui get text 
 static Rectangle GetTextBounds(int control, Rectangle bounds);  // Get text bounds considering control bounds
 static const char *GetTextIcon(const char *text, int *iconId);  // Get text icon if provided and move text cursor
 
-static void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint);         // Gui draw text using default font
 static void GuiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, Color color);   // Gui draw rectangle using default raygui style
 
 static const char **GuiTextSplit(const char *text, char delimiter, int *count, int *textRow);   // Split controls text into multiple strings
@@ -1543,8 +1544,8 @@ int GuiTabBar(Rectangle bounds, const char **text, int count, int *active)
     if (*active < 0) *active = 0;
     else if (*active > count - 1) *active = count - 1;
 
-    int offsetX = 0;    // Required in case tabs go out of screen
-    offsetX = (*active + 2)*RAYGUI_TABBAR_ITEM_WIDTH - GetScreenWidth();
+    int offsetX = 0;    // Required in case tabs go out of ~~screen~~ bounds
+    offsetX = (*active + 2)*RAYGUI_TABBAR_ITEM_WIDTH - bounds.width;
     if (offsetX < 0) offsetX = 0;
 
     // Draw control
@@ -1553,7 +1554,8 @@ int GuiTabBar(Rectangle bounds, const char **text, int count, int *active)
     {
         tabBounds.x = bounds.x + (RAYGUI_TABBAR_ITEM_WIDTH + 4)*i - offsetX;
 
-        if (tabBounds.x < GetScreenWidth())
+				// this is better than it was :/
+        if (tabBounds.x < bounds.x + bounds.width && tabBounds.x > bounds.x - tabBounds.width)
         {
             // Draw tabs as toggle controls
             int textAlignment = GuiGetStyle(TOGGLE, TEXT_ALIGNMENT);
@@ -3982,7 +3984,7 @@ const char **GetTextLines(const char *text, int *count)
 }
 
 // Gui draw text using default font
-static void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint)
+void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint)
 {
     #define TEXT_VALIGN_PIXEL_OFFSET(h)  ((int)h%2)     // Vertical alignment for pixel perfect
 
@@ -4097,7 +4099,7 @@ static void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color
             }
 
             // TODO: Allow users to set line spacing for text: GuiSetStyle(TEXTBOX, TEXT_LINES_SPACING, x)
-            posOffsetY += (float)GuiGetStyle(DEFAULT, TEXT_SIZE)*1.5f;
+            posOffsetY += (float)GuiGetStyle(DEFAULT, TEXT_SIZE)*1.2f;
             //---------------------------------------------------------------------------------
         }
     }

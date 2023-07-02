@@ -40,21 +40,27 @@
 #include <stdio.h>
 #include <assert.h>
 
+static void CreateWindows() {
+	pbWindow* w = pbSuspiciousWindowCreate();
+	w->x = 0;
+	w->y = 0;
+	assert(pbWinManAdd(w, w->size)==0);
+	pbWindowFree(w);
+	// ...
+	#if PBOX_DEBUG 
+	pbDebugWindowToggle();
+	#endif
+	w = pbExplorerWindowStatic();
+	w->x = GetScreenWidth()/2 - w->w/2;
+	w->y = GetScreenHeight()/2 - w->h/2;
+	assert(pbWinManAdd(w, w->size)==0);
+}
+
 int pbMain() {
 	pbRenderCreate();
 	pbWinManCreate();
-	pbWindow* w = pbDebugWindowCreate();
-	w->x = 300;
-	w->y = 200;
-	assert(pbWinManAdd(w, w->size)==0);
-	pbWindowFree(w);
-	w = pbBlankWindowCreate();
-	assert(pbWinManAdd(w, w->size)==0);
-	pbWindowFree(w);
-	w = pbSuspiciousWindowCreate();
-	w->x = 400;
-	assert(pbWinManAdd(w, w->size)==0);
-	pbWindowFree(w);
+	CreateWindows();
+
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(BLACK);
