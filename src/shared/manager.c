@@ -1,5 +1,6 @@
 /*
 ** This file is a part of PixelBox - infinite sandbox game
+** Window Manager implementation
 ** Copyright (C) 2021-2023 UtoECat
 **
 ** This program is free software: you can redistribute it and/or modify
@@ -18,9 +19,9 @@
 
 #include "config.h"
 #include "window.h"
+#include "info.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 static pbWinMan _WM;
 static pbWinMan *WM = &_WM;
@@ -54,7 +55,7 @@ pbWindow* pbWinManAdd(pbWindow* src, PBOX_SIZE_T size) {
 		int stat = updateSize(WM->size + 5);	
 		if (stat < 0) {
 			pbWindowFree(n);
-			fprintf(stderr, "mamalloc error in window array resizing\n");
+			pbLog(LOG_ERROR, "mamalloc error in window array resizing");
 			return PBOX_CAST(pbWindow*, 0); // memalloc error
 		}
 	}
@@ -138,7 +139,7 @@ static void moveOnTop() {
 			pbWindow* f = WM->select; 
 			for (; i < WM->count && WM->array[i] != f; i++); // search current selected window
 			if (i == WM->count) { // Fatal error check
-				fprintf(stderr, "fuck\n");
+				pbLog(LOG_ERROR, "Invalid selected window (not in windows list)");
 				return;
 			}
 			for (; i < WM->count-1; i++) { // MOVE windows
@@ -377,24 +378,24 @@ void pbWinManRender() {
 pbWindow* pbWindowClone(const pbWindow* src, PBOX_SIZE_T size) {
 	if (size < sizeof(pbWindow)) return PBOX_NULL;
 	if (src->size < sizeof(pbWindow)) {
-		fprintf(stderr, "bad window structure size field value!\n");
+		pbLog(LOG_ERROR, "bad window structure size field value! (%p)", src);
 		return PBOX_NULL;
 	}
 	if (size < src->size) return PBOX_NULL;
 	void *p = calloc(size, 1);
 	if (!p) {
-		fprintf(stderr, "mamalloc error in window allocation\n");
+		pbLog(LOG_ERROR, "mamalloc error in window allocation!");
 		return PBOX_NULL;
 	}
 	pbWindow* out = PBOX_CAST(pbWindow*, p);
 	memcpy(out, src, src->size);
 	out->size = size;
 	if (out->xCreate && out->xCreate(out) < 0) {
-		fprintf(stderr, "window constructor error!\n");
+		pbLog(LOG_WARNING, "window constructor error!");
 		free(out);
 		return PBOX_NULL;
 	};
-	fprintf(stderr, "window constructor OK!\n");
+	pbLog(LOG_INFO, "window constructor OK!");
 	return out;
 }
 

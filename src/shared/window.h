@@ -1,5 +1,6 @@
 /*
 ** This file is a part of PixelBox - infinite sandbox game
+** Window manager & Windows definitions
 ** Copyright (C) 2021-2023 UtoECat
 **
 ** This program is free software: you can redistribute it and/or modify

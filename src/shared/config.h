@@ -21,7 +21,7 @@
 #define PBOX_VERSION_MAJOR 0
 #define PBOX_VERSION_MINOR 5
 
-#define PBOX_RELEASE_NAME "amogus de amoguso"
+#define PBOX_RELEASE_NAME "suspicious de suspicious"
 
 // type definitions and predefinitions
 
@@ -54,6 +54,9 @@
 #warning PBOX_DEBUG was not defined!
 #define PBOX_DEBUG 1
 #endif
+
+// printable info
+const char* pbSummaryGetInfo();
 
 /*
 ** Naming practice :

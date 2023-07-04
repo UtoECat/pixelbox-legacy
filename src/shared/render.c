@@ -1,5 +1,6 @@
 /*
 ** This file is a part of PixelBox - infinite sandbox game
+** Abstracted Rendering operations/Context initialization
 ** Copyright (C) 2021-2023 UtoECat
 **
 ** This program is free software: you can redistribute it and/or modify
@@ -19,7 +20,10 @@
 #include "render.h"
 #include "config.h"
 
+void pbLogSystemInit();
+
 int  pbRenderCreate(int isClient) {
+	pbLogSystemInit(); // hehe
 	int flags = FLAG_VSYNC_HINT 		| FLAG_WINDOW_RESIZABLE;
 	if (isClient)
 		flags |= FLAG_WINDOW_ALWAYS_RUN;

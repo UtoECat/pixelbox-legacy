@@ -38,7 +38,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.\n\
 extern int pbClient();
 
 int main(int argc, char** argv) {
-	fprintf(stderr, "[LOG] : Pixelbox is starting...\n");
 	if (argc > 1) {
 		for(int i = 1; i < argc; i++) {
 			char* v = argv[i];

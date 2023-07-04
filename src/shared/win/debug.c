@@ -18,6 +18,7 @@
 
 #include "config.h"
 #include "window.h"
+#include "info.h"
 
 // debug window implementation
 
@@ -29,16 +30,27 @@ static int debug_create(pbWindow* W) {
 	return 0;	
 }
 
+int GuiMarkdown(Rectangle rec, const char* src);
+
+static Vector2 scroll;
+
 static int debug_render(pbWindow* w, Rectangle rect, int input) {
-	int old = rect.height;
-	rect.height = 20;
-	GuiLine(rect, TextFormat("Pixelbox : %s v.%i.%i", 
-		PBOX_RELEASE_NAME, PBOX_VERSION_MAJOR, PBOX_VERSION_MINOR));
-	rect.y += rect.height;
-	GuiLine(rect, TextFormat("FPS : %i", (int)GetFPS()));
-	rect.y += rect.height;
-	rect.height = old;
-	rect.y -= 40;
+	Rectangle unused;	
+	Font font = GuiGetFont();
+	float fontSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
+	float scaleFactor = fontSize/font.baseSize;
+	float lineh = fontSize/scaleFactor + 3; 
+
+	int totalCount = pbLogGetLinesCount();
+	int count = rect.height / lineh;
+	int shift = lineh - ((int)rect.height % (int)lineh);
+
+	if (count > totalCount) count = totalCount;
+	const char*	log = pbLatestLog(count);
+	if (*log == '\n') log++;
+	rect.y -= shift;
+	rect.height += shift;
+	GuiMarkdown(rect, log);
 }
 
 static void debug_destroy(pbWindow* w) {
@@ -47,7 +59,7 @@ static void debug_destroy(pbWindow* w) {
 
 static const pbWindow debug_window = {
 	sizeof(pbWindow),
-	"debug",
+	"Debug Log",
 	0, 0, 300, 200,
 	NORMAL_WINDOW_FLAGS,
 	debug_create,

@@ -20,7 +20,7 @@ CCFLAGS  = -O0 -Wall -Wextra -g -DPBOX_DEBUG=1 -Wno-unused
 UNIFLAGS = -fsanitize=address -fsanitize=undefined
 else
 CCFLAGS  = -O2 -Wall -DPBOX_DEBUG=0
-UNIFLAGS = -flto
+UNIFLAGS = -flto -s
 endif
 
 # no edit!
@@ -51,15 +51,15 @@ client : $(CLIENT_TARGET)
 all : $(TARGET)
 	@echo "[MAKE] Sucess!"
 
-$(SERVER_TARGET): $(SOBJS)
+$(SERVER_TARGET): $(SOBJS) $(INC_FILES)
 	@echo "[MAKE] Building server target for $(PLATFORM)..."
 	@$(MKDIR_P) $(dir $@)
-	$(COMPILER) $(SOBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+	@$(COMPILER) $(SOBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
 
-$(CLIENT_TARGET): $(COBJS)
+$(CLIENT_TARGET): $(COBJS) $(INC_FILES)
 	@echo "[MAKE] Building client target for $(PLATFORM)..."
 	@$(MKDIR_P) $(dir $@)
-	$(COMPILER) $(COBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+	@$(COMPILER) $(COBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c
