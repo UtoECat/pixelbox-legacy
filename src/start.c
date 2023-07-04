@@ -20,6 +20,8 @@
 #include <stdio.h>
 
 const char* license_string = "\n\
+Copyright (C) 2021-2023 UtoECat\n\
+\n\
 This program is free software: you can redistribute it and/or modify\n\
 it under the terms of the GNU General Public License as published by\n\
 the Free Software Foundation, either version 3 of the License, or\n\

@@ -97,11 +97,14 @@ static int checkWindowCollision(Vector2 mouse, pbWindow* f) {
 	return CheckCollisionPointRec(mouse, rect);
 }
 
+// if active window was closed
+static int closed_active = 0;
+
 void updateFocus() {
 	Vector2 mouse = GetMousePosition();
 	static Vector2 oldmouse = {0, 0};
 
-	if (mouse.x == oldmouse.x && mouse.y == oldmouse.y) {
+	if ((mouse.x == oldmouse.x && mouse.y == oldmouse.y) && !closed_active) {
 		return; // nothing to do
 	}
 	oldmouse = mouse;
@@ -307,10 +310,12 @@ static int pbWindowRender (pbWindow* win, int update) {
 	}
 }
 
+
 void pbWinManRender() {
 	// update focus
-	if (!pressing && !scaling) {
+	if ((!pressing && !scaling) || closed_active) {
 		updateFocus();
+		closed_active = 0;
 		if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) ||
 			IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) ||
 			IsMouseButtonPressed(MOUSE_MIDDLE_BUTTON)) moveOnTop();
@@ -349,8 +354,16 @@ void pbWinManRender() {
 	if (need_to_collect) {
 		PBOX_SIZE_T rem = 0; // nothing to remove first time
 		for (PBOX_SIZE_T i = 0; i < WM->count - rem; i++) {
-			if (WM->array[i] == PBOX_NULL || WM->array[i]->flags & PBOX_WINDOW_CLOSED) {
-				pbWindowFree(WM->array[i]); // close and free window
+			while (i+rem < WM->count && 
+					(WM->array[i+rem] == PBOX_NULL ||
+					WM->array[i+rem]->flags & PBOX_WINDOW_CLOSED)
+				) {
+				pbWindowFree(WM->array[i+rem]); // close and free window
+				// if closed selected window
+				if (WM->array[i+rem] == WM->select) {
+					WM->select = PBOX_CAST(pbWindow*, PBOX_NULL);
+					closed_active = 1; // need to reselect
+				}
 				rem++;
 			}
 			WM->array[i] = WM->array[i + rem];

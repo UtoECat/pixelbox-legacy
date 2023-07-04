@@ -75,9 +75,13 @@ pbWindow* pbWindowClone(const pbWindow* src, PBOX_SIZE_T size);
 // calls destroy too
 void      pbWindowFree (pbWindow* w); 
 
+// custom widget
+int GuiMarkdown(Rectangle, const char*);
+
 // Window implemented here
 pbWindow* pbExplorerWindowStatic(void);
 pbWindow* pbDebugWindowCreate(void);
 pbWindow* pbDebugWindowToggle();
+void      pbManualWindowToggle(void);
 pbWindow* pbBlankWindowCreate(void);
 pbWindow* pbSuspiciousWindowCreate(void);

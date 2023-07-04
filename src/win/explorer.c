@@ -56,9 +56,9 @@ extern int GuiToggleTheme();
 
 int GuiTabBarEx(Rectangle bounds, int width, int clb, const char **text, int count, int *active);
 static Vector2 Escroll[ETABS] = {{0, 0}};
-static Eheights[ETABS] = {450, 100, 100, 100};
+static Eheights[ETABS] = {475, 100, 100, 100};
 
-void GuiLoadStyleDark(void);
+#define PBOX_DESCRIPTION "infinite sandbox game"
 
 static int debug_render(pbWindow* w, Rectangle rect, int input) {
 	Rectangle tabs = rect;
@@ -76,18 +76,22 @@ static int debug_render(pbWindow* w, Rectangle rect, int input) {
 			int y = rect.y + scroll.y + 10;
 			DrawTexture(sus, rect.x + rect.width/2 - SUS_WIDTH/2, y, WHITE);
 			y += SUS_HEIGHT - 10;
-			GuiDrawText(TextFormat("Pixelbox : %s v.%i.%i\n%s\n BUILD %s %s", 
-					PBOX_RELEASE_NAME, PBOX_VERSION_MAJOR, PBOX_VERSION_MINOR, 
-					license_string, __DATE__, __TIME__),
-				(Rectangle){rect.x, y, rect.width, 420}, TEXT_ALIGN_CENTER, 
+			GuiDrawText(TextFormat("Pixelbox %s - %s\n v.%i.%i\n BUILD %s %s", 
+					PBOX_RELEASE_NAME, PBOX_DESCRIPTION, PBOX_VERSION_MAJOR,
+					PBOX_VERSION_MINOR, __DATE__, __TIME__),
+				(Rectangle){rect.x, y, rect.width, 80}, TEXT_ALIGN_CENTER, 
 				GetColor(GuiGetStyle(DEFAULT, GuiGetState() == STATE_DISABLED ? 
 					BORDER_COLOR_DISABLED : LINE_COLOR))
 			);
-			y += 320;
+			y += 80;
 			Rectangle box = {rect.x + rect.width/4, y, rect.width/2, 25};
 			if (GuiButton(box, "Get Source Code")) {
 				OpenURL("https://github.com/UtoECat/pixelbox");
 			};
+			box.y += 30;
+			if (GuiButton(box, "Show Help")) {
+				pbManualWindowToggle();
+			}
 		}; break;
 		case 1 : { // EDIT TAB
 			int y = rect.y + scroll.y + 10;
