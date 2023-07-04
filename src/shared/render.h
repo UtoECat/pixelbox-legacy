@@ -16,4 +16,11 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once 
+#include <raylib.h>
+
+int  pbRenderCreate(int isClient);
+void pbRenderSetFullscreen(int v);
+void pbRenderDestroy(void);
+
+int GuiLoadTheme();
+int GuiToggleTheme();

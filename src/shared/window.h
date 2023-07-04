@@ -62,8 +62,8 @@ struct window_manager {
 // creates wm
 int  pbWinManCreate();
 
-// adds window from structure. Returns -1 on error
-int  pbWinManAdd(pbWindow* src, PBOX_SIZE_T size);
+// adds window from structure. Returns null on error
+pbWindow*  pbWinManAdd(pbWindow* src, PBOX_SIZE_T size);
 
 void pbWinManDestroy(); // destroys window manager and all windows
 void pbWinManRender(); // renders and processes all windows
@@ -75,13 +75,3 @@ pbWindow* pbWindowClone(const pbWindow* src, PBOX_SIZE_T size);
 // calls destroy too
 void      pbWindowFree (pbWindow* w); 
 
-// custom widget
-int GuiMarkdown(Rectangle, const char*);
-
-// Window implemented here
-pbWindow* pbExplorerWindowStatic(void);
-pbWindow* pbDebugWindowCreate(void);
-pbWindow* pbDebugWindowToggle();
-void      pbManualWindowToggle(void);
-pbWindow* pbBlankWindowCreate(void);
-pbWindow* pbSuspiciousWindowCreate(void);

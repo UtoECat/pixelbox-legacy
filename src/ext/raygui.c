@@ -38,8 +38,10 @@ int GuiTabBarEx(Rectangle bounds, int width, int closeable, const char **text, i
             int textPadding = GuiGetStyle(TOGGLE, TEXT_PADDING);
             GuiSetStyle(TOGGLE, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
             GuiSetStyle(TOGGLE, TEXT_PADDING, 8);
-            if (i == *active) GuiToggle(tabBounds, text[i], true);
-            else if (GuiToggle(tabBounds, text[i], false) == true) *active = i;
+
+						bool toggle = !!(*active == i);
+            GuiToggle(tabBounds, text[i], &toggle);
+           	if (toggle) *active = i;
             GuiSetStyle(TOGGLE, TEXT_PADDING, textPadding);
             GuiSetStyle(TOGGLE, TEXT_ALIGNMENT, textAlignment);
 
@@ -74,9 +76,11 @@ int GuiLoadTheme() {
 	else {
 		GuiLoadStyleBluish();
 	}
+	return 0;
 }
 
 int GuiToggleTheme() {
 	current_theme = !current_theme;				
 	GuiLoadTheme();
+	return 0;
 };

@@ -16,11 +16,18 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <raylib.h>
+#pragma once
+#include "window.h"
 
-int  pbRenderCreate();
-void pbRenderSetFullscreen(int v);
-void pbRenderDestroy(void);
+// custom widget
+int GuiMarkdown(Rectangle, const char*);
 
-int GuiLoadTheme();
-int GuiToggleTheme();
+// Implemented common windows
+pbWindow* pbExplorerWindowStatic(void);
+
+// server manual
+pbWindow* pbManualWindowToggle(void);
+
+pbWindow* pbDebugWindowToggle();
+pbWindow* pbSuspiciousWindowCreate();
+

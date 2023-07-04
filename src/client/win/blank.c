@@ -16,4 +16,33 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once 
+#include "config.h"
+#include "window.h"
+
+// debug window implementation
+
+static int debug_create(pbWindow* W) {
+
+}
+
+static int debug_render(pbWindow* w, Rectangle rect, int input) {
+
+}
+
+static void debug_destroy(pbWindow* w) {
+
+}
+
+static const pbWindow debug_window = {
+	sizeof(pbWindow),
+	"blank",
+	0, 0, 300, 200,
+	NORMAL_WINDOW_FLAGS,
+	debug_create,
+	debug_render,
+	debug_destroy
+};
+
+pbWindow* pbBlankWindowCreate() {
+	return pbWindowClone(&debug_window, sizeof(pbWindow));
+}

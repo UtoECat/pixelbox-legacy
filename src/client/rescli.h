@@ -16,33 +16,18 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../config.h"
-#include "../window.h"
+#pragma once
+#include "window.h"
 
-// debug window implementation
+// custom widget
+int GuiMarkdown(Rectangle, const char*);
 
-static int debug_create(pbWindow* W) {
+// Implemented common windows
+pbWindow* pbExplorerWindowStatic(void);
 
-}
+pbWindow* pbDebugWindowToggle();
+#warning manual defined
+void      pbManualWindowToggle(void);
 
-static int debug_render(pbWindow* w, Rectangle rect, int input) {
-
-}
-
-static void debug_destroy(pbWindow* w) {
-
-}
-
-static const pbWindow debug_window = {
-	sizeof(pbWindow),
-	"blank",
-	0, 0, 300, 200,
-	NORMAL_WINDOW_FLAGS,
-	debug_create,
-	debug_render,
-	debug_destroy
-};
-
-pbWindow* pbBlankWindowCreate() {
-	return pbWindowClone(&debug_window, sizeof(pbWindow));
-}
+pbWindow* pbBlankWindowCreate(void);
+pbWindow* pbSuspiciousWindowCreate(void);

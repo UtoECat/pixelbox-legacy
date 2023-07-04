@@ -16,10 +16,11 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../config.h"
-#include "../window.h"
+#include "config.h"
+#include "window.h"
+#include "rescli.h"
 #include <raylib.h>
-#include "../ext/sus.h"
+#include "sus.h"
 
 // debug window implementation
 
@@ -66,7 +67,8 @@ static int debug_render(pbWindow* w, Rectangle rect, int input) {
 	rect.y += 25;
 	rect.height -= 25;
 	GuiTabBarEx(tabs, 75, 0, cats, ETABS, &active_tab);
-	GuiScrollPanel(rect, (char*)0, (Rectangle){0, 0, 300, Eheights[active_tab]}, &Escroll[active_tab]);
+	Rectangle unused;
+	GuiScrollPanel(rect, (char*)0, (Rectangle){0, 0, 300, Eheights[active_tab]}, &Escroll[active_tab], &unused);
 	Vector2 scroll = Escroll[active_tab];
 	
 	EndScissorMode();

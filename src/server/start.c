@@ -1,5 +1,5 @@
 /*
-** This file is a part of PixelBox - infinite sandbox game
+** This file is a part of PixelBox Server - infinite sandbox game
 ** Copyright (C) 2021-2023 UtoECat
 **
 ** This program is free software: you can redistribute it and/or modify
@@ -35,16 +35,16 @@ You should have received a copy of the GNU General Public License\n\
 along with this program. If not, see <https://www.gnu.org/licenses/>.\n\
 ";
 
-extern int pbMain();
+extern int pbServer();
 
 int main(int argc, char** argv) {
-	fprintf(stderr, "[LOG] : Pixelbox is starting...\n");
+	fprintf(stderr, "[LOG] : Pixelbox Server is starting...\n");
 	if (argc > 1) {
 		for(int i = 1; i < argc; i++) {
 			char* v = argv[i];
 			if (v[0] == '-') switch(v[1]) {
 				case 'h':
-					fprintf(stdout, "Pixelbox - infinite sandbox game.\n");
+					fprintf(stdout, "Pixelbox Server - infinite sandbox game.\n");
 					fprintf(stdout, "Copyright (C) UtoECat 2021-2023\n");
 					fprintf(stdout, "%s\n", license_string);
 					fprintf(stdout, "Debug=%i, WordSize=%li, ByteSize=%li\n", PBOX_DEBUG,
@@ -61,5 +61,5 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-	return pbMain();
+	return pbServer();
 }

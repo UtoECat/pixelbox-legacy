@@ -16,8 +16,9 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../config.h"
-#include "../window.h"
+#include "config.h"
+#include "window.h"
+#include <math.h>
 
 static Texture texture_cache[10] = {0};
 static int     textures_count = 0;

@@ -16,8 +16,8 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../config.h"
-#include "../window.h"
+#include "config.h"
+#include "window.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -45,9 +45,9 @@ int  pbWinManCreate() {
 	return updateSize(10);
 }
 
-int pbWinManAdd(pbWindow* src, PBOX_SIZE_T size) {
+pbWindow* pbWinManAdd(pbWindow* src, PBOX_SIZE_T size) {
 	pbWindow* n = pbWindowClone(src, size);
-	if (!n) return -1;
+	if (!n) return n;
 
 	// no place in the array anymore -> resize array
 	if (WM->size >= WM->count) {
@@ -55,7 +55,7 @@ int pbWinManAdd(pbWindow* src, PBOX_SIZE_T size) {
 		if (stat < 0) {
 			pbWindowFree(n);
 			fprintf(stderr, "mamalloc error in window array resizing\n");
-			return -1; // memalloc error
+			return PBOX_CAST(pbWindow*, 0); // memalloc error
 		}
 	}
 
@@ -71,7 +71,7 @@ int pbWinManAdd(pbWindow* src, PBOX_SIZE_T size) {
 		WM->array[WM->count++] = n;
 	}
 
-	return 0; // OK
+	return n; // OK
 }
 
 void pbWinManDestroy() {

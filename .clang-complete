@@ -1,0 +1,7 @@
+-I/usr/include
+-I/usr/local/include
+-I./src
+-I./src/shared
+-I./src/server
+-I./src/client
+-I./src/ext

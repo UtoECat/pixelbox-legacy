@@ -16,26 +16,18 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../config.h"
-#include "../window.h"
+#include "config.h"
+#include "window.h"
+#include "rescli.h"
+#include "manual.h"
 #include <math.h>
 
 // debug window implementation
 
-static pbWindow* once = PBOX_CAST(pbWindow*, PBOX_NULL);
-
-struct manual_page {
-	const char* title;
-	const char* content;
-	Vector2     scroll;
-	int         height;
-};
 
 extern const char* const license_string;
 
-#define PAGES_COUNT 6
-#define PLACEHOLDER "lorem\ninpsulm\nfuck\nme\noh\tf\nno"
-struct manual_page Manual[PAGES_COUNT] = {
+struct manual_page Manual[] = {
 	{"general", 
 	"# About Pixelbox\n"
 	"\tPixelbox is an 'infinite' sandbox game. Your entire world actually limited, but this limits "
@@ -44,17 +36,24 @@ struct manual_page Manual[PAGES_COUNT] = {
 	"uses multiple threads to process your world and also processes only interrupted by player, "
 	"or by another pixel pieces of world -> chunks.\n"
 	"World have limited amount of materials : *64*, and 4 color variations for each.\n"
+	"Also, client-server model is used, to allow multiplayer in future...\n"
 	"# What i can do in Pixelbox?\n"
 	"nothing, since this all is still in refactoring :p"
 	},
 	{"interface",
 	"## good luck :)\n"
 	},
-	{"controls", 
-	"cxuhdshdffds" PLACEHOLDER
+	{"security", 
+	"at current moment of development, there is *NO ANY ENCRYPTION* "
+	"for data sended between client and server, and also no any "
+	"ways to validate separate clients and servers! I will add ssh "
+	"encrypction in future, whan basics will be done!\n"
+	"# conclusion\n"
+	"DO NOT SEND ANY SENSITIVE, PRIVATE DATA IN GLOBAL CHAT, AND DO NOT "
+	"DRAW IT IN THE WORLD!"
 	}, 
-	{"worlds",
-	"wodjsddfad" PLACEHOLDER
+	{"server",
+		"Server can do only ne world, filled up win manu players at once.\n"
 	},
 	{"internet", 
 	"# Header 1\n"
@@ -66,64 +65,23 @@ struct manual_page Manual[PAGES_COUNT] = {
 	},
 	{"license",
 	""
+	}, {
+		(char*) 0,
+		(char*) 0
 	}
 };
 
-static int active_tab = 0;
-
-static int debug_create(pbWindow* W) {
-	if (once) return -1;
-	once = W;
-	Manual[5].content = license_string;
-	return 0;	
-}
-
-int GuiTabBarEx(Rectangle bounds, int width, int clb, const char **text, int count, int *active);
-
-static int debug_render(pbWindow* w, Rectangle rect, int input) {
-	Rectangle tabs_rect = rect;
-	tabs_rect.height = 25;
-	rect.y += 25;
-	rect.height -= 25;
-
-	const char* cats[PAGES_COUNT];
-	for (int i = 0; i < PAGES_COUNT; i++) {
-		cats[i] = Manual[i].title;
-	}
-
-	int oldtab = active_tab; // to check for changes
-	GuiTabBarEx(tabs_rect, 95, 0, cats, PAGES_COUNT, &active_tab);
-	
-	GuiScrollPanel(rect, (char*)0, (Rectangle){0, 0, 400,
-		Manual[active_tab].height}, &(Manual[active_tab].scroll));
-	Vector2 scroll = Manual[active_tab].scroll;
-	
-	EndScissorMode();
-	BeginScissorMode(rect.x, rect.y, rect.width, rect.height);
-	rect.x += 5;
-	rect.width -= 5;
-
-	int h = GuiMarkdown((Rectangle){rect.x, rect.y + scroll.y, rect.width, rect.height},
-		Manual[active_tab].content								
-	);
-	Manual[active_tab].height = h;
-}
+static pbWindow* once = PBOX_CAST(pbWindow*, PBOX_NULL);
 
 static void debug_destroy(pbWindow* w) {
 	once = PBOX_CAST(pbWindow*, PBOX_NULL);
 }
 
-static const pbWindow debug_window = {
-	sizeof(pbWindow),
-	"information",
-	0, 0, 450, 350,
-	NORMAL_WINDOW_FLAGS,
-	debug_create,
-	debug_render,
-	debug_destroy
-};
-
 void pbManualWindowToggle() {
-	if (!once) pbWinManAdd(&debug_window, sizeof(pbWindow));
-	else once->flags |= PBOX_WINDOW_CLOSED;
+	Manual[5].content = license_string;
+	if (!once) {
+		struct manual_window* w = pbManualWindowCreateAndAdd(&(Manual[0]));
+		if (w) w->window.xDestroy = debug_destroy;
+		once = PBOX_CAST(pbWindow*, w);
+	} else once->flags |= PBOX_WINDOW_CLOSED;
 }

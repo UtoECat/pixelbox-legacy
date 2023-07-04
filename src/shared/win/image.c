@@ -16,9 +16,9 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "../config.h"
-#include "../window.h"
-#include "../ext/sus.h"
+#include "config.h"
+#include "window.h"
+#include "sus.h"
 
 // debug window implementation
 

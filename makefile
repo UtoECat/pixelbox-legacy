@@ -1,12 +1,14 @@
-
 BUILD_DIR ?= ./build
 BINARY_DIR ?= ./
-SRC_DIRS ?= ./src 
+
+SERVER_SOURCES ?= ./src/ext/ ./src/server ./src/shared
+CLIENT_SOURCES ?= ./src/ext/ ./src/client ./src/shared
 INC_DIRS ?= ./src
 
-TARGET_NAME ?= pixelbox
-COMPILER ?= gcc
-LDLIBS= -lGL -lm -lsqlite3 -lraylib
+CLIENT_NAME ?= pixelbox
+SERVER_NAME ?= pixelbox-server
+COMPILER    ?= gcc
+LDLIBS       = -lGL -lm -lsqlite3 -lraylib
 
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
@@ -14,7 +16,7 @@ RM       ?= rm
 DEBUG = 1
 
 ifeq ($(DEBUG),1)
-CCFLAGS  = -O0 -Wall -Wextra -g -DPBOX_DEBUG=1 
+CCFLAGS  = -O0 -Wall -Wextra -g -DPBOX_DEBUG=1 -Wno-unused
 UNIFLAGS = -fsanitize=address -fsanitize=undefined
 else
 CCFLAGS  = -O2 -Wall -DPBOX_DEBUG=0
@@ -22,10 +24,19 @@ UNIFLAGS = -flto
 endif
 
 # no edit!
-TARGET = $(BINARY_DIR)/$(TARGET_NAME)
-SRCS := $(shell find $(SRC_DIRS) -name '*.c' -or -name '*.cpp')
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
-DEPS := $(OBJS:.o=.d)
+SERVER_TARGET = $(BINARY_DIR)/$(SERVER_NAME)
+CLIENT_TARGET = $(BINARY_DIR)/$(CLIENT_NAME)
+TARGET = TARGET
+.PHONY: $(TARGET) all clean server client
+
+$(TARGET) : $(SERVER_TARGET) $(CLIENT_TARGET)
+
+SSRCS := $(shell find $(SERVER_SOURCES) -name '*.c' -or -name '*.cpp')
+SOBJS := $(SSRCS:%=$(BUILD_DIR)/%.o)
+SDEPS := $(SOBJS:.o=.d)
+CSRCS := $(shell find $(CLIENT_SOURCES) -name '*.c' -or -name '*.cpp')
+COBJS := $(CSRCS:%=$(BUILD_DIR)/%.o)
+CDEPS := $(COBJS:.o=.d)
 INC_FILES := $(shell find $(INC_DIRS) -type d) 
 INC_FLAGS := $(addprefix -I,$(INC_FILES))
 
@@ -34,15 +45,21 @@ UNIFLAGS +=
 
 # targets
 
-.PHONY: all clean $(TARGET)
+server : $(SERVER_TARGET)
+client : $(CLIENT_TARGET)
 
 all : $(TARGET)
 	@echo "[MAKE] Sucess!"
 
-$(TARGET): $(OBJS)
-	@echo "[MAKE] Building target for $(PLATFORM)..."
+$(SERVER_TARGET): $(SOBJS)
+	@echo "[MAKE] Building server target for $(PLATFORM)..."
 	@$(MKDIR_P) $(dir $@)
-	@$(COMPILER) $(OBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+	$(COMPILER) $(SOBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+
+$(CLIENT_TARGET): $(COBJS)
+	@echo "[MAKE] Building client target for $(PLATFORM)..."
+	@$(MKDIR_P) $(dir $@)
+	$(COMPILER) $(COBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c

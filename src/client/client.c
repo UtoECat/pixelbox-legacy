@@ -37,6 +37,7 @@
 #include "config.h"
 #include "window.h"
 #include "render.h"
+#include "rescli.h"
 #include <stdio.h>
 #include <assert.h>
 
@@ -44,7 +45,7 @@ static void CreateWindows() {
 	pbWindow* w = pbSuspiciousWindowCreate();
 	w->x = 0;
 	w->y = 0;
-	assert(pbWinManAdd(w, w->size)==0);
+	assert(pbWinManAdd(w, w->size));
 	pbWindowFree(w);
 	// ...
 	#if PBOX_DEBUG 
@@ -53,11 +54,11 @@ static void CreateWindows() {
 	w = pbExplorerWindowStatic();
 	w->x = GetScreenWidth()/2 - w->w/2;
 	w->y = GetScreenHeight()/2 - w->h/2;
-	assert(pbWinManAdd(w, w->size)==0);
+	assert(pbWinManAdd(w, w->size));
 }
 
-int pbMain() {
-	pbRenderCreate();
+int pbClient() {
+	pbRenderCreate(1);
 	pbWinManCreate();
 	CreateWindows();
 

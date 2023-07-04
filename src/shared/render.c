@@ -19,15 +19,16 @@
 #include "render.h"
 #include "config.h"
 
-int  pbRenderCreate() {
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_ALWAYS_RUN
-		| FLAG_WINDOW_RESIZABLE);
-	const char* name = TextFormat("pixelbox v%i.%i - %s", 
-		PBOX_VERSION_MAJOR, PBOX_VERSION_MINOR, "nomotd");
+int  pbRenderCreate(int isClient) {
+	int flags = FLAG_VSYNC_HINT 		| FLAG_WINDOW_RESIZABLE;
+	if (isClient)
+		flags |= FLAG_WINDOW_ALWAYS_RUN;
+	SetConfigFlags(flags);
+	const char* name = TextFormat("pixelbox %s v%i.%i - %s", isClient ? "" : "server", PBOX_VERSION_MAJOR, PBOX_VERSION_MINOR, "nomotd");
 	InitWindow(640, 480, name);
 	if (!IsWindowReady()) return -1;
 	SetExitKey(KEY_NULL);
-	//SetTargetFPS(60);
+	if (!isClient) EnableEventWaiting();
 	GuiLoadTheme();
 	return 0;
 }

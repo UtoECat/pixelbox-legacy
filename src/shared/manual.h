@@ -16,4 +16,20 @@
 ** along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#pragma once 
+#include "config.h"
+#include "window.h"
+
+struct manual_page {
+	const char* title;
+	const char* content;
+	Vector2     scroll;
+	int         height;
+};
+
+struct manual_window {
+	pbWindow window;
+	struct manual_page* manual;
+	int active_tab;
+};
+
+struct manual_window* pbManualWindowCreateAndAdd(struct manual_page* man);
