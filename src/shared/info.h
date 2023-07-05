@@ -22,6 +22,7 @@
 const char* pbLatestLog(int lines);
 void pbClearLog();
 int pbLogGetLinesCount();
+void pbLogSystemInit();
 
 #include <raylib.h>
 #define pbLog(level, ...) TraceLog(level, __VA_ARGS__)

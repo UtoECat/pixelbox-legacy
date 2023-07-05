@@ -1,0 +1,29 @@
+PRAGMA database_list;
+SELECT name FROM "main".sqlite_schema  WHERE type='index'   AND tbl_name LIKE ?1 UNION ALL SELECT 'temp'||'.'||name FROM "temp".sqlite_schema  WHERE type='index'   AND tbl_name LIKE ?1 ORDER BY 1;
+SELECT sql FROM  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x     FROM sqlite_schema UNION ALL   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_schema) WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' ORDER BY x;
+SELECT rowid FROM sqlite_schema WHERE name GLOB 'sqlite_stat[134]';
+create table if not exists CHUNKS (id INTEGER PRIMARY KEY, BLOB VALUE)
+;
+SELECT sql FROM  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x     FROM sqlite_schema UNION ALL   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_schema) WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' ORDER BY x;
+SELECT rowid FROM sqlite_schema WHERE name GLOB 'sqlite_stat[134]';
+create table if not exists CHUNKS (id INTEGER PRIMARY KEY, BLOB val)
+;
+SELECT sql FROM  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x     FROM sqlite_schema UNION ALL   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_schema) WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' ORDER BY x;
+SELECT rowid FROM sqlite_schema WHERE name GLOB 'sqlite_stat[134]';
+DROP TABLE CHUNKS;
+create table if not exists CHUNKS (id INTEGER PRIMARY KEY, BLOB val)
+;
+SELECT sql FROM  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x     FROM sqlite_schema UNION ALL   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_schema) WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' ORDER BY x;
+SELECT rowid FROM sqlite_schema WHERE name GLOB 'sqlite_stat[134]';
+DROP TABLE CHUNKS;
+create table if not exists CHUNKS (id INTEGER PRIMARY KEY, val BLOB)
+;
+SELECT sql FROM  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x     FROM sqlite_schema UNION ALL   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_schema) WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' ORDER BY x;
+SELECT rowid FROM sqlite_schema WHERE name GLOB 'sqlite_stat[134]';
+create table if not exists SERVERS (id INTEGER PRIMARY KEY, val BOOL)
+;
+SELECT sql FROM  (SELECT sql sql, type type, tbl_name tbl_name, name name, rowid x     FROM sqlite_schema UNION ALL   SELECT sql, type, tbl_name, name, rowid FROM sqlite_temp_schema) WHERE type!='meta' AND sql NOTNULL AND name NOT LIKE 'sqlite_%' ORDER BY x;
+SELECT rowid FROM sqlite_schema WHERE name GLOB 'sqlite_stat[134]';
+INSERT INTO SERVERS VALUES(100, true)
+;
+SELECT * FROM SERVERS;

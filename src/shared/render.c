@@ -23,7 +23,6 @@
 void pbLogSystemInit();
 
 int  pbRenderCreate(int isClient) {
-	pbLogSystemInit(); // hehe
 	int flags = FLAG_VSYNC_HINT 		| FLAG_WINDOW_RESIZABLE;
 	if (isClient)
 		flags |= FLAG_WINDOW_ALWAYS_RUN;

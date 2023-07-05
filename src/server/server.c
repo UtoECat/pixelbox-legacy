@@ -38,6 +38,8 @@
 #include "window.h"
 #include "render.h"
 #include "ressrv.h"
+#include "sql.h"
+#include "info.h"
 #include <raylib.h>
 #include <stdio.h>
 #include <assert.h>
@@ -52,7 +54,12 @@ static void CreateWindows() {
 	assert(pbWinManAdd(w, w->size));
 }
 
+pbDataBase* MainDB;
+
 int pbServer() {
+	pbLogSystemInit();
+	MainDB = pbDataBaseCreate("server.db", PBOX_SERVER_DATABASE);
+	if (!MainDB) return -1;
 	pbRenderCreate(0);
 	pbWinManCreate();
 	CreateWindows();
@@ -69,5 +76,6 @@ int pbServer() {
 	}
 	pbWinManDestroy();
 	pbRenderDestroy();
+	pbDataBaseDestroy(MainDB); // hehe
 	return 0;
 }

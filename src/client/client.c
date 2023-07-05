@@ -38,8 +38,12 @@
 #include "window.h"
 #include "render.h"
 #include "rescli.h"
+#include "info.h"
+#include "sql.h"
 #include <stdio.h>
 #include <assert.h>
+
+pbDataBase* MainDB;
 
 static void CreateWindows() {
 	pbWindow* w = pbSuspiciousWindowCreate();
@@ -58,6 +62,12 @@ static void CreateWindows() {
 }
 
 int pbClient() {
+	pbLogSystemInit();
+	MainDB = pbDataBaseCreate("client.db", PBOX_CLIENT_DATABASE);
+	if (!MainDB) {
+		MainDB = pbDataBaseCreate(":memory:", PBOX_CLIENT_DATABASE);
+	}
+	if (!MainDB) return -1;
 	pbRenderCreate(1);
 	pbWinManCreate();
 	CreateWindows();
@@ -74,5 +84,6 @@ int pbClient() {
 	}
 	pbWinManDestroy();
 	pbRenderDestroy();
+	pbDataBaseDestroy(MainDB);
 	return 0;
 }
