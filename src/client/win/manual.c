@@ -69,12 +69,22 @@ static pbWindow* once = PBOX_CAST(pbWindow*, PBOX_NULL);
 
 static void debug_destroy(pbWindow* w) {
 	once = PBOX_CAST(pbWindow*, PBOX_NULL);
+	pbSaveWindowData(w, "manual");
 }
+
+#include "info.h"
 
 void pbManualWindowToggle() {
 	Manual[5].content = license_string;
 	if (!once) {
 		struct manual_window* w = pbManualWindowCreateAndAdd(&(Manual[0]));
+		if (pbLoadWindowData(&(w->window), "manual") <= 0) {
+			pbLog(LOG_ERROR, "can't load manual!");
+			w->window.w = 480;
+			w->window.h = 360;
+			w->window.x = GetScreenWidth()/2- w->window.w/2;
+			w->window.y = GetScreenHeight()/2- w->window.h/2;
+		}
 		if (w) w->window.xDestroy = debug_destroy;
 		once = PBOX_CAST(pbWindow*, w);
 	} else once->flags |= PBOX_WINDOW_CLOSED;

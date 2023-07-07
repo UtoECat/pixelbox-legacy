@@ -13,14 +13,14 @@ LDLIBS       = -lGL -lm -lsqlite3 -lraylib
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
 
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(DEBUG),1)
 CCFLAGS  = -O0 -Wall -Wextra -g -DPBOX_DEBUG=1 -Wno-unused
 UNIFLAGS = -fsanitize=address -fsanitize=undefined
 else
 CCFLAGS  = -O2 -Wall -DPBOX_DEBUG=0
-UNIFLAGS = -flto -s
+UNIFLAGS = -s
 endif
 
 # no edit!

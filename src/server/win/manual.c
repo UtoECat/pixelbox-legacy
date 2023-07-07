@@ -21,6 +21,7 @@
 #include "rescli.h"
 #include "manual.h"
 #include <math.h>
+#include "info.h"
 
 // debug window implementation
 
@@ -75,6 +76,7 @@ static pbWindow* once = PBOX_CAST(pbWindow*, PBOX_NULL);
 
 static void debug_destroy(pbWindow* w) {
 	once = PBOX_CAST(pbWindow*, PBOX_NULL);
+	pbSaveWindowData(w, "manual");
 }
 
 void pbManualWindowToggle() {
@@ -82,6 +84,13 @@ void pbManualWindowToggle() {
 	if (!once) {
 		struct manual_window* w = pbManualWindowCreateAndAdd(&(Manual[0]));
 		if (w) w->window.xDestroy = debug_destroy;
+		if (pbLoadWindowData(&(w->window), "manual") <= 0) {
+			pbLog(LOG_ERROR, "can't load manual!");
+			w->window.w = 480;
+			w->window.h = 360;
+			w->window.x = GetScreenWidth()/2- w->window.w/2;
+			w->window.y = GetScreenHeight()/2- w->window.h/2;
+		}
 		once = PBOX_CAST(pbWindow*, w);
 	} else once->flags |= PBOX_WINDOW_CLOSED;
 }

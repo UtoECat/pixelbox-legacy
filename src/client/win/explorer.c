@@ -20,6 +20,7 @@
 #include "window.h"
 #include "rescli.h"
 #include <raylib.h>
+#include "sql.h"
 #include "sus.h"
 
 // debug window implementation
@@ -43,6 +44,14 @@ static int debug_create(pbWindow* W) {
 		sus = LoadTextureFromImage(img);
 	}
 	refcnt++;
+
+	if (pbLoadWindowData(W, "explorer") <= 0) {
+		W->w = 480;
+		W->h = 360;
+		W->x = GetScreenWidth()/2- W->w/2;
+		W->y = GetScreenHeight()/2- W->h/2;
+	}
+	
 	return 0;
 }
 
@@ -129,6 +138,7 @@ static void debug_destroy(pbWindow* w) {
 	once = PBOX_CAST(pbWindow*, PBOX_NULL);
 	refcnt--;
 	if (!refcnt) UnloadTexture(sus);
+	pbSaveWindowData(w, "explorer");
 }
 
 

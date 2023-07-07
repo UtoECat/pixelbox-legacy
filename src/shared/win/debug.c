@@ -19,6 +19,7 @@
 #include "config.h"
 #include "window.h"
 #include "info.h"
+#include "render.h"
 
 // debug window implementation
 
@@ -36,25 +37,24 @@ static Vector2 scroll;
 
 static int debug_render(pbWindow* w, Rectangle rect, int input) {
 	Rectangle unused;	
-	Font font = GuiGetFont();
-	float fontSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
-	float scaleFactor = fontSize/font.baseSize;
-	float lineh = fontSize/scaleFactor + 3; 
+	
+	int   lines_count = pbLogGetLinesCount();
+	int   available   = rect.height / getLineHeight();
+	float log_height  = lines_count * getLineHeight();
 
-	int totalCount = pbLogGetLinesCount();
-	int count = rect.height / lineh;
-	int shift = lineh - ((int)rect.height % (int)lineh);
+	int textshift     = -scroll.y / getLineHeight();
+	const char*	log = pbLatestLog(available + textshift);
 
-	if (count > totalCount) count = totalCount;
-	const char*	log = pbLatestLog(count);
+	GuiScrollPanel(rect, (char*)0, (Rectangle){0, 0, 400, log_height},
+		&scroll, &unused);
+
 	if (*log == '\n') log++;
-	rect.y -= shift;
-	rect.height += shift;
-	GuiMarkdown(rect, log);
+	GuiTextView(rect, log);
 }
 
 static void debug_destroy(pbWindow* w) {
 	once = PBOX_CAST(pbWindow*, PBOX_NULL);
+	pbSaveWindowData(w, "debug_log");
 }
 
 static const pbWindow debug_window = {
@@ -67,11 +67,15 @@ static const pbWindow debug_window = {
 	debug_destroy
 };
 
-pbWindow* pbDebugWindowCreate() {
-	return pbWindowClone(&debug_window, sizeof(pbWindow));
-}
-
 pbWindow* pbDebugWindowToggle() {
-	if (!once) pbWinManAdd(&debug_window, sizeof(pbWindow));
-	else once->flags |= PBOX_WINDOW_CLOSED;
+	if (!once) {
+		pbWindow* w = pbWinManAdd(&debug_window, sizeof(pbWindow));
+		if (pbLoadWindowData(w, "debug_log") <= 0) {
+			w->w = 480;
+			w->h = 360;
+			w->x = GetScreenWidth()/2- w->w/2;
+			w->y = GetScreenHeight()/2- w->h/2;
+			w->flags ^= PBOX_WINDOW_NORMAL;
+		}
+	} else once->flags |= PBOX_WINDOW_CLOSED;
 }

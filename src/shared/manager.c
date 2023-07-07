@@ -20,6 +20,7 @@
 #include "config.h"
 #include "window.h"
 #include "info.h"
+#include "sql.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -295,11 +296,14 @@ static int pbWindowRender (pbWindow* win, int update) {
 			GuiPanel(windowPanel, NULL); // Draw window base
 			// and content
 			if (win->xRender) {
+				if (scaling || pressing) {
+					GuiLock(); // important sometimes
+				}
 				BeginScissorMode(windowPanel.x, windowPanel.y, windowPanel.width, windowPanel.height);	
 				res = win->xRender(win, windowPanel, update);
 				EndScissorMode();
 			}
-			if (!(win->flags & PBOX_WINDOW_PINNED) && !GuiIsLocked()) {
+			if (!(win->flags & PBOX_WINDOW_PINNED) && update) {
 				DrawTriangle(
 					(Vector2){scaleDot.x,              (float)(win->y + win->h)},
 					(Vector2){(float)(win->x + win->w), (float)(win->y + win->h)},
@@ -405,3 +409,58 @@ void pbWindowFree (pbWindow* win) {
 	free(win);
 }
 
+#include <stdio.h>
+
+#define FMTWIN(field) snprintf(tmp, 63, "win_%s_%s", id, field);
+#define SAVEWIN(field, value) FMTWIN(field); \
+	pbSetDataBaseLongProperty(MainDB, tmp, value);
+#define LOADWIN(field) FMTWIN(field); \
+	val = pbGetDataBaseLongProperty(MainDB, tmp);
+void pbSaveWindowData(pbWindow* w, const char* id) {
+	char tmp[64];
+	SAVEWIN("w", w->w);
+	SAVEWIN("h", w->h);
+	SAVEWIN("x", w->x);
+	SAVEWIN("y", w->y);
+	SAVEWIN("hidden", !(w->flags & PBOX_WINDOW_NORMAL));
+	SAVEWIN("pinned", w->flags & PBOX_WINDOW_PINNED);
+}
+
+int pbLoadWindowData(pbWindow* w, const char* id) {
+	int val;
+	char tmp[64];
+
+	LOADWIN("w");
+	if (val <= 25) return -1;
+	else if (val > GetScreenWidth()) w->w = GetScreenWidth();
+	else w->w = val;
+
+	LOADWIN("h");
+	if (val <= 25) return -1;
+	else if (val > GetScreenHeight()) w->h = GetScreenHeight();
+	else w->h = val;
+
+	LOADWIN("x");
+	if (val <= 0) w->x = GetScreenWidth()/2 - w->w/2;
+	else if (val >= GetScreenWidth()-20) w->x = GetScreenWidth() - w->w; 
+	else w->x = val;
+
+	LOADWIN("y");
+	if (val <= 0) w->y = GetScreenHeight()/2 - w->h/2;
+	else if (val >= GetScreenHeight()-20) w->y = GetScreenHeight() - w->h; 
+	else w->y = val;
+
+	LOADWIN("hidden");
+	if (val >= 0) {
+		if (!val) w->flags |= PBOX_WINDOW_NORMAL;
+		else if (w->flags & PBOX_WINDOW_NORMAL) w->flags ^= PBOX_WINDOW_NORMAL;
+	}
+
+	LOADWIN("pinned");
+	if (val >= 0) {
+		if (val) w->flags |= PBOX_WINDOW_PINNED;
+		else if (w->flags & PBOX_WINDOW_PINNED) w->flags ^= PBOX_WINDOW_PINNED;
+	}
+
+	return 1;
+}

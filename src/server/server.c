@@ -49,8 +49,6 @@ static void CreateWindows() {
 	pbDebugWindowToggle();
 	#endif
 	pbWindow* w = pbExplorerWindowStatic();
-	w->x = GetScreenWidth()/2 - w->w/2;
-	w->y = GetScreenHeight()/2 - w->h/2;
 	assert(pbWinManAdd(w, w->size));
 }
 

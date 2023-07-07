@@ -1,4 +1,7 @@
 *.o
 *.d
 /pixelbox
+/pixelbox-server
+*.exe
+*.dll
 *.db

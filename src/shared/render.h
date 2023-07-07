@@ -24,3 +24,7 @@ void pbRenderDestroy(void);
 
 int GuiLoadTheme();
 int GuiToggleTheme();
+
+int GuiTextView(Rectangle rec, const char* src);
+float getStringHeight(const char* str);
+float getLineHeight();

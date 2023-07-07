@@ -20,14 +20,13 @@
 
 enum {
 	STMT_OPTIMIZE    = 0, //+ optimize database statement
-	STMT_INITIALIZE  = 1, // "initialize" database - add all important tables
-	STMT_SETCHUNK    = 2, // set binary chunk data
-	STMT_GETCHUNK    = 3, // get binary chunk data
+	STMT_SETCHUNK    = 1, // set binary chunk data
+	STMT_GETCHUNK    = 2, // get binary chunk data
 	STMT_SETPROPERTY = 4, //+ set some property for GUI's
 	STMT_GETPROPERTY = 5, //+ get it
 	//STMT_GETACCOUNT  = 6, // get player account by ID and all data with it
 	//STMT_SETACCOUNT  = 7, // set player account by ID and all data with it
-	STMT_DROP_ALL = 11,   //+ remove all pixelbox-specific data in database 
+	//STMT_DROP_ALL = 11,   //+ remove all pixelbox-specific data in database 
 	STMT_MAX = 12 // count of statements
 };
 
@@ -63,28 +62,26 @@ static int init_statements(pbDataBase* p, int mode) {
 	if (!pbExecuteDataBaseQuery(p, prepare_statement)) return 0;
 	sqlite3_stmt* stmt;
 
-	// INIT statements. Important to execute fistly
+	// common INIT
+ 	if (!pbExecuteDataBaseQuery(p, 
+		SAFE_CREATE "PROPERTIES (key STRING PRIMARY KEY, value);" 
+		SAFE_CREATE "CRYPTO  (id INTEGER PRIMARY KEY, value STRING);"
+	)) return 0;
+
+	// specific INIT statements. Important to execute fistly
 	if (mode == PBOX_SERVER_DATABASE) {
 		// INIT
- 		stmt = create_statement(p, 
-			SAFE_CREATE "PROPERTIES (key STRING PRIMARY KEY, value);" 
+ 		pbExecuteDataBaseQuery(p, 
 			SAFE_CREATE "WCHUNKS  (id INTEGER PRIMARY KEY, value BLOB);"
-			SAFE_CREATE "CRYPTO  (id INTEGER PRIMARY KEY, value STRING);"
 			SAFE_CREATE "CLIENTS (key STRING PRIMARY KEY, data  BLOB);"
 		);
-		if (!stmt) return -1;
-		p->statements[STMT_INITIALIZE] = stmt;
 
 	} else if (mode == PBOX_CLIENT_DATABASE) {
 
 		// INIT
- 		stmt = create_statement(p, 
-			SAFE_CREATE "PROPERTIES (key STRING PRIMARY KEY, value);" 
-			SAFE_CREATE "CRYPTO  (id INTEGER PRIMARY KEY, value STRING);"
+ 		pbExecuteDataBaseQuery(p, 
 			SAFE_CREATE "SERVERS (key STRING PRIMARY KEY, rated BOOL);"
 		);
-		if (!stmt) return -1;
-		p->statements[STMT_INITIALIZE] = stmt;
 		
 	}
 
@@ -114,20 +111,11 @@ static int init_statements(pbDataBase* p, int mode) {
 	p->statements[STMT_SETPROPERTY] = stmt;
 
 	if (mode == PBOX_SERVER_DATABASE) {
-		// DROP all tables
- 		stmt = create_statement(p, 
-			"DROP TABLE IF EXISTS PROPERTIES;" 
-			"DROP TABLE IF EXISTS WCHUNKS;"	
-			"DROP TABLE IF EXISTS CRYPTO;"
-			"DROP TABLE IF EXISTS CLIENTS;"
-		);
-		if (!stmt) return -1;
-		p->statements[STMT_DROP_ALL] = stmt;
 
 		// EXCLUSIVE FOR SERVER!
 		// CHUNK GET
  		stmt = create_statement(p, 
-			"SELECT value FROM WCHUNKS WHERE key = ?1;"
+			"SELECT value FROM WCHUNKS WHERE id = ?1;"
 		);
 		if (!stmt) return -1;
 		p->statements[STMT_GETCHUNK] = stmt;
@@ -140,15 +128,6 @@ static int init_statements(pbDataBase* p, int mode) {
 		p->statements[STMT_SETCHUNK] = stmt;
 
 	} else if (mode == PBOX_CLIENT_DATABASE) {
-
-		// DROP all tables
- 		stmt = create_statement(p, 
-			"DROP TABLE IF EXISTS PROPERTIES;" 
-			"DROP TABLE IF EXISTS CRYPTO;"
-			"DROP TABLE IF EXISTS SERVERS;"
-		);
-		if (!stmt) return -1;
-		p->statements[STMT_DROP_ALL] = stmt;
 
 	} else return -2; // bad mode
 	return 1; // hehe
@@ -202,6 +181,7 @@ int statement_iterator(sqlite3_stmt* stmt) {
 		if (attemts < 100) goto retry;
 	}
 	if (res == SQLITE_DONE) {
+		pbLog(LOG_TRACE, "SQLITE_DONE!");
 	}
 	int stat;
 	if (res == SQLITE_DONE) stat = 0;
@@ -210,7 +190,7 @@ int statement_iterator(sqlite3_stmt* stmt) {
 		stat = -1;
 		pbLog(LOG_ERROR, "SQLITE3: STATEMENT: %s", sqlite3_errstr(res));
 	}
-	if (stat != 0) sqlite3_reset(stmt);
+	if (stat < 1) sqlite3_reset(stmt);
 	return stat;
 }
 
@@ -227,9 +207,7 @@ void  pbOptimizeDataBase(pbDataBase* p) {
 }
 
 int pbInitializeDataBase(pbDataBase* p) {
-	int stat = 0;
-	while ((stat = statement_iterator(p->statements[STMT_INITIALIZE])) > 0) {}
-	return stat >= 0; // true if not error
+
 }
 
 int pbExecuteDataBaseQuery(pbDataBase* p, const char* sql) { // UNSAFE
@@ -257,7 +235,7 @@ PBOX_INT64 pbGetDataBaseLongProperty(pbDataBase* p, const char* prop) {
 	PBOX_INT64 out = -1;
 
 	// bind key
-	if (sqlite3_bind_text(stmt, 0, prop, -1, SQLITE_STATIC) != SQLITE_OK)
+	if (sqlite3_bind_text(stmt, 1, prop, -1, SQLITE_STATIC) != SQLITE_OK)
 		return out;
 
 	// get result
@@ -280,7 +258,7 @@ char* pbGetDataBaseStringProperty(pbDataBase* p, const char* prop, char* dst, PB
 	char* sout = (char*)0;
 
 	// bind key
-	if (sqlite3_bind_text(stmt, 0, prop, -1, SQLITE_STATIC) != SQLITE_OK)
+	if (sqlite3_bind_text(stmt, 1, prop, -1, SQLITE_STATIC) != SQLITE_OK)
 		return sout;
 
 	while ((stat = statement_iterator(stmt)) > 0) {
@@ -302,16 +280,20 @@ void* pbGetDataBaseChunk(pbDataBase* p, PBOX_UINT32 id, PBOX_SIZE_T size);
 int pbSetDataBaseFloatProperty(pbDataBase* p, const char* prop, float v);
 int pbSetDataBaseLongProperty(pbDataBase* p, const char* prop, PBOX_INT64 v) {
 	sqlite3_stmt* stmt = p->statements[STMT_SETPROPERTY];
+	int err = SQLITE_OK;
 
 	// bind key
-	if (sqlite3_bind_text(stmt, 0, prop, -1, SQLITE_STATIC) != SQLITE_OK)
+	if ((err = sqlite3_bind_text(stmt, 1, prop, -1, SQLITE_STATIC)) != SQLITE_OK) {
 		return -1;
+	}
 
 	// bind value
-	if (sqlite3_bind_int64(stmt, 1, v) != SQLITE_OK) {
+	if ((err = sqlite3_bind_int64(stmt, 2, v)) != SQLITE_OK) {
 		sqlite3_clear_bindings(stmt); // important, can produce UB in other case
 		return -1;
 	}
+	
+	pbLog(LOG_TRACE, "props[%s] = '%li'!", prop, v);
 
 	int stat = 0;
 	while ((stat = statement_iterator(stmt)) > 0) {}
@@ -322,13 +304,15 @@ int pbSetDataBaseStringProperty(pbDataBase* p, const char* prop, const char* src
 	sqlite3_stmt* stmt = p->statements[STMT_SETPROPERTY];
 
 	// bind key
-	if (sqlite3_bind_text(stmt, 0, prop, -1, SQLITE_STATIC) != SQLITE_OK)
+	if (sqlite3_bind_text(stmt, 1, prop, -1, SQLITE_STATIC) != SQLITE_OK)
 		return -1;
 	// bind value
-	if (sqlite3_bind_text(stmt, 1, src , -1, SQLITE_STATIC) != SQLITE_OK) {
+	if (sqlite3_bind_text(stmt, 2, src , -1, SQLITE_STATIC) != SQLITE_OK) {
 		sqlite3_clear_bindings(stmt); // important, can produce UB in other case
 		return -1;
 	}
+
+	pbLog(LOG_TRACE, "props[%s] = '%s'!", prop, src);
 
 	int stat = 0;
 	while ((stat = statement_iterator(stmt)) > 0) {}

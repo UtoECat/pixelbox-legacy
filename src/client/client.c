@@ -46,18 +46,12 @@
 pbDataBase* MainDB;
 
 static void CreateWindows() {
-	pbWindow* w = pbSuspiciousWindowCreate();
-	w->x = 0;
-	w->y = 0;
-	assert(pbWinManAdd(w, w->size));
-	pbWindowFree(w);
-	// ...
 	#if PBOX_DEBUG 
 	pbDebugWindowToggle();
 	#endif
-	w = pbExplorerWindowStatic();
-	w->x = GetScreenWidth()/2 - w->w/2;
-	w->y = GetScreenHeight()/2 - w->h/2;
+	pbWindow* w = pbExplorerWindowStatic();
+	//w->x = GetScreenWidth()/2 - w->w/2;
+	//w->y = GetScreenHeight()/2 - w->h/2;
 	assert(pbWinManAdd(w, w->size));
 }
 
@@ -65,6 +59,7 @@ int pbClient() {
 	pbLogSystemInit();
 	MainDB = pbDataBaseCreate("client.db", PBOX_CLIENT_DATABASE);
 	if (!MainDB) {
+		pbLog(LOG_ERROR, "can't open database! Using in memory!");
 		MainDB = pbDataBaseCreate(":memory:", PBOX_CLIENT_DATABASE);
 	}
 	if (!MainDB) return -1;
@@ -75,7 +70,7 @@ int pbClient() {
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(BLACK);
-		const char* text = "Pixelbox Bootloader!";
+		const char* text = "Pixelbox!";
 		float len = TextLength(text);
 		DrawText(text, GetScreenWidth()/2 - len*10/2, 
 			GetScreenHeight()/2 - 10, 20, LIGHTGRAY);

@@ -76,3 +76,6 @@ pbWindow* pbWindowClone(const pbWindow* src, PBOX_SIZE_T size);
 // calls destroy too
 void      pbWindowFree (pbWindow* w); 
 
+// EXTRA
+void pbSaveWindowData(pbWindow* w, const char* id);
+int pbLoadWindowData(pbWindow* w, const char* id);

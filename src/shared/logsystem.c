@@ -83,7 +83,7 @@ static void (tracelog) (int level, const char *fmt, va_list args) {
 const char* pbLatestLog(int lines) {
 	int i;
 	lines++;
-	if (lines < 0) lines = 0;
+	if (lines < 0) return buffer;
 	for (i = (int)pos; i != 0 && lines; i--) {
 		if (buffer[i] == '\n') lines--;
 	}
