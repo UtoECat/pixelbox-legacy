@@ -1,14 +1,13 @@
 BUILD_DIR ?= ./build
 BINARY_DIR ?= ./
 
-SERVER_SOURCES ?= ./src/ext/ ./src/server ./src/shared
-CLIENT_SOURCES ?= ./src/ext/ ./src/client ./src/shared
+SOURCES ?= ./src/ext/ ./src/
 INC_DIRS ?= ./src
 
 CLIENT_NAME ?= pixelbox
 SERVER_NAME ?= pixelbox-server
 COMPILER    ?= gcc
-LDLIBS       = -lGL -lm -lsqlite3 -lraylib
+LDLIBS       = -lGL -lm -lraylib -lluajit
 
 MKDIR_P  ?= mkdir -p
 RM       ?= rm
@@ -31,12 +30,9 @@ TARGET = TARGET
 
 $(TARGET) : $(SERVER_TARGET) $(CLIENT_TARGET)
 
-SSRCS := $(shell find $(SERVER_SOURCES) -name '*.c' -or -name '*.cpp')
-SOBJS := $(SSRCS:%=$(BUILD_DIR)/%.o)
-SDEPS := $(SOBJS:.o=.d)
-CSRCS := $(shell find $(CLIENT_SOURCES) -name '*.c' -or -name '*.cpp')
-COBJS := $(CSRCS:%=$(BUILD_DIR)/%.o)
-CDEPS := $(COBJS:.o=.d)
+SRCS := $(shell find $(SOURCES) -name '*.c' -or -name '*.cpp')
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+DEPS := $(OBJS:.o=.d)
 INC_FILES := $(shell find $(INC_DIRS) -type d) 
 INC_FLAGS := $(addprefix -I,$(INC_FILES))
 
@@ -51,24 +47,30 @@ client : $(CLIENT_TARGET)
 all : $(TARGET)
 	@echo "[MAKE] Sucess!"
 
-$(SERVER_TARGET): $(SOBJS) $(INC_FILES)
+$(SERVER_TARGET): $(OBJS) ./build/server.o
 	@echo "[MAKE] Building server target for $(PLATFORM)..."
 	@$(MKDIR_P) $(dir $@)
-	@$(COMPILER) $(SOBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+	@$(COMPILER) $(OBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
 
-$(CLIENT_TARGET): $(COBJS) $(INC_FILES)
+$(CLIENT_TARGET): $(OBJS) ./build/client.o
 	@echo "[MAKE] Building client target for $(PLATFORM)..."
 	@$(MKDIR_P) $(dir $@)
-	@$(COMPILER) $(COBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+	@$(COMPILER) $(OBJS) $(UNIFLAGS) -o $@ $(LDLIBS) 
+
+LUA_ALL = $(shell find $(./src/shared) -name '*.lua')
+LUA_SRV = $(shell find $(./src/server) -name '*.lua') $(LUA_ALL)
+LUA_CLI = $(shell find $(./src/client) -name '*.lua') $(LUA_ALL)
+
+./build/server.o: $(LUA_SRV)
+	@echo "precompiling lua sources in $@"
+	@luajit ./tools/ar.lua $< | gcc -x c -o $@
+
+./build/client.o: $(LUA_CLI)
+	@echo "precompiling lua sources in $@"
+	@luajit ./tools/ar.lua $< | gcc -x c -o $@
 
 # c source
 $(BUILD_DIR)/%.c.o: %.c
-	@echo "[MAKE] Building $<"
-	@$(MKDIR_P) $(dir $@)
-	$(COMPILER) $(CCFLAGS) $(UNIFLAGS) -c $< -o $@
-
-# cpp source
-$(BUILD_DIR)/%.cpp.o: %.cpp
 	@echo "[MAKE] Building $<"
 	@$(MKDIR_P) $(dir $@)
 	$(COMPILER) $(CCFLAGS) $(UNIFLAGS) -c $< -o $@
